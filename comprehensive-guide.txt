@@ -1,0 +1,1075 @@
+Week 1: AWS Cloud Architecture - Security-First Approach
+Overview
+This comprehensive guide covers building AWS cloud infrastructure with a security-first mindset - where security is the foundation, not an add-on. Every architectural decision starts with the question: "Is this secure?"
+Key Learning Objectives:
+	• Understand AWS Shared Responsibility Model and infrastructure building blocks
+	• Master Identity and Access Management (IAM) fundamentals with hands-on demos
+	• Design secure Virtual Private Cloud (VPC) architecture from scratch
+	• Launch secure EC2 instances with proper security controls
+	• Implement security best practices and cost optimization strategies
+	• Complete 7 live demonstrations with CLI commands and explanations
+
+Why Security-First Architecture?
+What We Get by Taking a Security-First Approach
+1. Built-in Protection (Not Bolt-on)
+	• Security is designed into the architecture from day one
+	• Not something you add later when problems arise
+	• Prevents costly retrofitting of security controls
+2. Multiple Defense Layers (Defense in Depth)
+	• If one security control fails, others still protect you
+	• Like having multiple locks on your doors, security cameras, AND a guard
+	• Technical example: WAF + IAM + Encryption work together
+3. Compliance by Design
+	• Automatically meets regulatory requirements (GDPR, HIPAA, SOX)
+	• Audit trails and logging built-in from start
+	• Reduces compliance overhead and risk
+4. Cost Savings
+	• Prevents expensive security breaches
+	• Reduces manual security management overhead
+	• Avoids emergency security fixes
+5. Business Trust
+	• Customers trust you with their data
+	• Partners are confident in your security posture
+	• Enables digital transformation initiatives
+Traditional vs Security-First Approach
+Traditional Approach (Security Last):
+	1. Build Application
+	2. Make it work
+	3. Add security features
+	4. Hope nothing breaks
+Security-First Approach:
+	1. Define Security Requirements
+	2. Design Secure Architecture
+	3. Build Application within security framework
+	4. Monitor and improve continuously
+
+AWS Infrastructure Building Blocks
+Understanding the Foundation
+Before diving into security implementations, it's crucial to understand how AWS infrastructure is organized:
+1. Data Centers
+	• Physical buildings with redundant power, cooling, ventilation
+	• Servers and networking equipment running AWS services
+	• Each data center independent to avoid single points of failure
+	• AWS manages all physical security aspects
+2. Availability Zones (AZs)
+	• Combination of one or more data centers
+	• Highly connected with low-latency links within AZ
+	• Designed to be isolated from failures in other AZs
+	• Each AZ has independent power, cooling, networking
+3. Regions
+	• Geographic areas (e.g., US East, Asia Pacific)
+	• Each region contains at least 3 AZs
+	• AZs in a region are at least 60 miles apart (disaster isolation)
+	• Data sovereignty and compliance considerations
+4. Virtual Private Cloud (VPC)
+	• Your own private network inside AWS
+	• Choose IP address range and region
+	• Launch AWS resources (EC2, RDS) inside VPC
+	• Number of usable AZs depends on selected region
+
+AWS Account Setup and Initial Security
+Step 1: AWS Free Tier Account Creation
+Account Creation Process
+1. Navigate to aws.amazon.com
+2. Click "Create an AWS Account"
+3. Account Information:
+   - Account name: [YourName]-Cyber-Learning
+   - Email: Use business email (avoid personal)
+   - Password: Strong, unique password (16+ characters)
+4. Contact Information:
+   - Choose "Personal" for learning purposes
+   - Provide valid contact details
+5. Payment Information:
+   - Add valid payment method
+   - Free tier protects you for 12 months
+6. Identity Verification:
+   - Phone verification required
+   - SMS or voice call options available
+7. Support Plan:
+   - Choose "Basic Support - Free"
+Immediate Security Hardening (CRITICAL)
+Never skip these steps - complete immediately after account creation:
+	1. Secure Root Account with MFA
+Steps:
+1. Sign in to AWS Console as root user
+2. Go to IAM Dashboard
+3. Security Status section shows recommendations
+4. Click "Add MFA" for root account
+5. Choose "Authenticator App" (Google Authenticator, Authy)
+6. Scan QR code with your app
+7. Enter two consecutive MFA codes from app
+8. Click "Add MFA" - Root account now protected ✓
+	2. Create IAM Admin User (Never use root for daily tasks)
+IAM Console Steps:
+1. IAM → Users → Create user
+2. Username: admin-user
+3. Access type: 
+   ✓ Programmatic access (for CLI)
+   ✓ AWS Management Console access
+4. Console password: Set custom password
+5. Require password reset: ✓ (for security)
+6. Permissions: Attach existing policies directly
+7. Search and attach: AdministratorAccess
+8. Tags: Key=Purpose, Value=Learning
+9. Review and create
+10. DOWNLOAD credentials CSV immediately!
+	3. Set Up Billing Alerts
+1. Go to Billing Dashboard
+2. Set up billing budget for $10-20
+3. Create alerts at 50%, 80%, 100% of budget
+4. Add email notifications
+Step 2: AWS CLI Installation and Configuration
+Installation (Platform Specific)
+bash
+# Windows: Download installer from AWS documentation
+# Mac
+brew install awscli
+# Ubuntu/Debian  
+sudo apt update
+sudo apt install awscli
+# Verify installation
+aws --version
+Configuration with Admin User
+bash
+# Configure CLI with your admin user credentials
+aws configure
+# Enter when prompted:
+AWS Access Key ID: [From downloaded CSV]
+AWS Secret Access Key: [From downloaded CSV]  
+Default region name: us-east-1
+Default output format: json
+# Critical test - verify your identity
+aws sts get-caller-identity
+# Expected output:
+{
+    "UserId": "AIDACKCEVSQ6C2EXAMPLE",
+    "Account": "123456789012", 
+    "Arn": "arn:aws:iam::123456789012:user/admin-user"
+}
+
+AWS Shared Responsibility Model
+Understanding the Security Framework
+The Shared Responsibility Model is a security framework where AWS and customers share security responsibilities. AWS secures the cloud infrastructure, customers secure their data and applications in the cloud.
+AWS Responsibilities (Security "OF" the Cloud)
+Infrastructure Security
+	• Physical Security: Data centers, hardware, network infrastructure
+	• Global Infrastructure: Managing regions, availability zones, and connectivity between them
+	• Host Operating System: Patching and maintenance of underlying systems
+	• Hypervisor: Virtual machine isolation and management
+	• Network Controls: DDoS protection, port scanning protection
+	• Access Control: Training and management of AWS personnel
+Managed Services
+	• Configuration Management: Data routing between regions
+	• Patching and Maintenance: Core cloud infrastructure and managed services
+	• Server Management: Bare metal servers, switches, networking gear
+Customer Responsibilities (Security "IN" the Cloud)
+Identity and Access Management
+	• User Access Control: Implementing least privilege access principles
+	• Personnel Management: Proper training and access management for users
+	• Authentication: Strong password policies and MFA implementation
+Network and Application Security
+	• Network Configuration: VPCs, NACLs, Security Groups, firewalls
+	• Operating System: Maintaining and patching guest OS
+	• Application Security: Code security, runtime protection
+	• Data Protection: Encryption at rest and in transit
+Compliance and Monitoring
+	• Audit Logging: Implementing proper logging and monitoring
+	• Incident Response: Responding to security incidents
+	• Compliance: Meeting regulatory requirements
+Why This Matters for Security Professionals
+When assessing environments, you need to clearly understand:
+	• What AWS handles automatically
+	• What requires configuration and maintenance
+	• Where security gaps typically occur (usually on the customer side)
+	• How to properly allocate security responsibilities
+
+Identity and Access Management (IAM) Deep Dive
+Core IAM Concepts
+Identity and Access Management (IAM) is AWS's service for managing users, groups, roles, and policies. Understanding IAM is crucial for implementing security-first architecture.
+Authentication vs Authorization
+	• Authentication: Identification of who you are (proving identity)
+	• Authorization: Determines what you're allowed to do (permissions)
+	• ARN (Amazon Resource Name): AWS-specific identifier for resources
+IAM Components
+1. Root User
+Characteristics:
+- Most powerful user in AWS account
+- Should NOT be used for daily operations
+- Permanent identity that cannot be removed
+- Password policy set by Amazon (not customizable)
+- Can access absolutely everything in the account
+- Should be protected with MFA always
+Security Best Practice: Only use for account setup and billing
+2. IAM Users
+Characteristics:
+- Recommended for daily use instead of root account
+- Friendly identifier names (e.g., "john.smith")
+- Password policies set by root/admin users
+- Can have permanent or temporary permissions
+- Account-specific URL login
+- Constrained access based on attached policies
+Use Cases: Individual people or applications needing AWS access
+3. IAM Groups
+Purpose: Container for user accounts
+Benefits:
+- Ease of administration
+- Assign policies once to the group
+- Create user collections based on job functions
+- Simplifies permission management
+Example: Finance team group with finance-related permissions
+4. IAM Policies
+An IAM Policy defines permissions and can be identity-based or resource-based.
+Identity-Based Policies (Attached to users, groups, or roles)
+1. AWS Managed Policies:
+	• Predefined by AWS for common use cases
+	• Automatically updated by AWS (includes new services)
+	• Examples: ReadOnlyAccess, PowerUserAccess, AdministratorAccess
+2. Customer Managed Policies:
+	• Created by users for specific requirements
+	• Provides restricted or custom permissions
+	• Completely managed by you (updates, testing required)
+	• Reusable across multiple identities
+3. Inline Policies:
+	• Embedded directly into a user, group, or role
+	• Not reusable or shareable
+	• Deleted when the identity is deleted
+Resource-Based Policies
+	• Attached directly to AWS resources (S3 buckets, etc.)
+	• Define who can access the resource and what actions they can perform
+	• Cross-account access capabilities
+5. IAM Roles
+IAM Roles provide temporary credentials with specific permissions.
+Key Characteristics
+	• Temporary Access: Credentials automatically rotate
+	• No Permanent Credentials: More secure than static access keys
+	• Assumable: Users or services can "assume" the role temporarily
+	• Cross-Account Access: Can be used across AWS accounts
+IAM User vs IAM Role Comparison
+
+Aspect	IAM User	IAM Role
+Access Type	Permanent	Temporary
+Credentials	Static	Temporary (auto-rotating)
+Security	Less secure (manual rotation)	More secure (automatic rotation)
+Use Case	Daily access	Time-limited access
+Best For	Individual users	Services, cross-account access
+Service Roles
+Special roles that allow AWS services to access other AWS services securely.
+Example: EC2 instance accessing S3 bucket
+	• Without Service Role: Hard-code keys in application (dangerous)
+	• With Service Role: EC2 assumes role, gets temporary credentials automatically
+
+Hands-On IAM Implementation (7 Complete Demos)
+Demo 1: Securing Root Account and Creating IAM User
+Step 1: Initial Root Account Security
+bash
+# After creating AWS account:
+# 1. Sign in to AWS Console as root
+# 2. Navigate to IAM Dashboard  
+# 3. Complete Security Status checklist:
+✓ Delete root access keys (if created)
+✓ Activate MFA on root account  
+✓ Create individual IAM users
+✓ Use groups to assign permissions
+✓ Apply IAM password policy
+Step 2: Create IAM User
+bash
+# Console Steps:
+# 1. IAM Console → Users → Add User
+# 2. Username: [your-name]
+# 3. Access types: Both programmatic and console
+# 4. Set custom password
+# 5. Skip permissions for now
+# 6. Add tags: Purpose=Learning
+# 7. Create user and download credentials
+# Test: Sign in as IAM user - should have limited access
+Command Explanation:
+	• aws sts get-caller-identity: Returns the AWS account ID, user ID, and ARN of the calling entity
+	• This command verifies you're using the correct credentials and helps troubleshoot authentication issues
+Demo 2: IAM Groups and Permissions
+Create IAM Group with Read-Only Access
+bash
+# Console Steps:
+# 1. Sign in as root user
+# 2. IAM → User groups → Create group
+# 3. Group name: iamreadonly
+# 4. Add your IAM user to the group
+# 5. Attach policy: IAMReadOnlyAccess
+# 6. Create group
+# Test as IAM user:
+# - Can view IAM resources ✓
+# - Cannot create or modify ✗
+Command Explanation:
+	• aws iam list-users: Lists all IAM users in the account (works with read-only access)
+	• aws iam create-user: Would fail with read-only access, demonstrating least privilege
+Demo 3: Custom Managed Policies
+Create S3 Full Access Policy
+bash
+# Console Steps:
+# 1. Sign in as root
+# 2. Create S3 bucket for testing: iamtestaccess-[unique-suffix]
+# 3. IAM → Policies → Create policy
+# 4. Service: S3
+# 5. Actions: All S3 actions
+# 6. Resources: All resources  
+# 7. Name: iampolicytests3full
+# 8. Create policy
+# Attach to IAM user:
+# 1. Users → Select user → Add permissions
+# 2. Attach policies directly
+# 3. Filter: Customer managed
+# 4. Select: iampolicytests3full
+# 5. Add permissions
+# Test: IAM user now
+
+Test: IAM user now has full S3 access
+
+**Command Explanation:**
+- `aws s3 ls`: Lists all S3 buckets (works after policy attachment)
+- `aws s3api get-bucket-location --bucket [bucket-name]`: Gets bucket region information
+- These commands demonstrate granular permission control - S3 access works while other services remain blocked
+### Demo 4: IAM Roles Implementation
+#### Create and Test IAM Role
+```bash
+# Step 1: Create new IAM user (no permissions)
+# IAM → Users → Create user: neil2
+# Console access only, no policies attached
+# Step 2: Create IAM Role  
+# IAM → Roles → Create role
+# Trusted entity: AWS account (this account)
+# Attach policy: iampolicytests3full
+# Role name: iamroletests3
+# Step 3: Restrict role to specific user
+# Copy neil2's ARN
+# Edit role trust policy to include neil2's ARN only
+# Step 4: Test role assumption
+# Sign in as neil2
+# Try S3 access: ❌ Denied
+# Switch role → Enter role name
+# Try S3 access: ✅ Full access
+# Switch back → S3 access denied again
+Trust Policy Example:
+json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::123456789012:user/neil2"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+Command Explanation:
+	• Role assumption provides temporary credentials (typically 1 hour)
+	• aws sts assume-role: Command to programmatically assume a role
+	• This demonstrates how temporary access can be granted and revoked
+Demo 5: EC2 Service Roles
+Create EC2 Instance with S3 Access Role
+bash
+# Step 1: Create IAM role for EC2
+# IAM → Roles → Create role
+# Trusted entity: AWS service → EC2
+# Attach policy: iampolicytests3full  
+# Role name: iamroleec2s3
+# Step 2: Launch EC2 instance
+# EC2 → Launch instance
+# Name: iamtestec2s3
+# AMI: Amazon Linux (free tier)
+# Instance type: t2.micro
+# No key pair needed
+# Advanced details → IAM instance profile: iamroleec2s3
+# Step 3: Test S3 access from EC2
+# Connect using EC2 Instance Connect
+# Run: aws s3 ls
+# Should list S3 buckets ✓
+# Cleanup: Terminate instance
+Command Explanation from EC2 Instance:
+bash
+# These commands run ON the EC2 instance
+aws s3 ls  # Works - role allows S3 access ✅
+aws ec2 describe-instances  # Fails - role doesn't allow EC2 access ❌
+# Show instance metadata with role credentials
+curl http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroleec2s3
+Instance Metadata Service (IMDS):
+	• Provides temporary credentials to EC2 instances
+	• Credentials automatically rotate every 6 hours
+	• No hardcoded keys needed in applications
+
+Virtual Private Cloud (VPC) Architecture
+Understanding VPC Building Blocks
+VPC Connectivity Options
+1. Internet Connectivity
+Enables communication between VPC resources and the internet.
+Components Required:
+	• Internet Gateway (IGW): Forwards traffic to/from internet
+	• Route Table: Routes traffic to appropriate destinations
+	• Public IP/Elastic IP: Internet-routable address for instances
+Traffic Flow Process:
+Outbound (EC2 → Internet):
+1. EC2 sends traffic using private IP
+2. Internet Gateway translates to public IP
+3. Traffic reaches internet destination
+Inbound (Internet → EC2):
+1. Traffic sent to public IP address
+2. Internet Gateway receives traffic
+3. Translates and forwards to EC2's private IP
+2. Direct Connect Connectivity
+Private dedicated network connection between on-premises and AWS.
+Benefits over Public Internet:
+	• Consistent performance and lower latency
+	• Better security (private connection)
+	• Private IP communication
+	• Bandwidth options from 50 Mbps to 100 Gbps
+Use Cases:
+	• High bandwidth requirements
+	• Consistent network performance needed
+	• Regulatory compliance requiring private connectivity
+3. Site-to-Site VPN Connectivity
+Secure, encrypted connection over public internet.
+Characteristics:
+	• Lower cost than Direct Connect
+	• Faster to set up than Direct Connect
+	• Encrypted traffic (IPSec)
+	• Uses public internet (variable performance)
+	• Behaves like permanent private connection
+DNS in AWS: Route 53
+Route 53 Services
+	• DNS Registration: Domain name registration
+	• DNS Record Management: A, AAAA, CNAME, MX records
+	• Traffic Routing: Geolocation, weighted, failover routing
+	• Private DNS: Internal DNS resolution within VPCs
+Route 53 Resolver (Private DNS in VPCs)
+	• Built-in recursive DNS service in every VPC
+	• Automatically available at VPC base IP + 2
+	• Example: VPC 10.0.0.0/16 → Resolver at 10.0.0.2
+VPC DNS Settings:
+	• enableDnsSupport: Enables DNS resolution using Route 53 Resolver
+	• enableDnsHostnames: Assigns DNS hostnames to instances with public IPs
+VPC Creation Process
+Step 1: Choose Region
+Select AWS region for VPC location (determines physical location of resources)
+Step 2: Assign Network Range
+Define IPv4 CIDR block for VPC:
+	• AWS allows /16 (65,536 IPs) to /28 (16 IPs)
+	• Use private IP ranges per RFC 1918: 
+		○ 10.0.0.0/8
+		○ 172.16.0.0/12
+		○ 192.168.0.0/16
+Step 3: Create Subnets
+	• Divide VPC into smaller IP ranges
+	• Select Availability Zone for each subnet
+	• AZ names mapped differently per account
+Important Subnet Concepts
+Reserved IPs in each subnet:
+	• .0 → Network address
+	• .1 → VPC router
+	• .2 → DNS resolver
+	• .3 → Reserved for future use
+	• .255 → Broadcast address
+Step 4: Internet Connectivity Setup
+bash
+# Create and attach Internet Gateway
+# Update route table with route: 0.0.0.0/0 → IGW
+# Assign public/Elastic IP to instances
+
+Hands-On VPC Implementation
+Demo 6: VPC Creation Demo
+Step 1: Create VPC
+bash
+# AWS Console Steps:
+# 1. Sign in as root user
+# 2. Navigate to VPC service
+# 3. Create VPC → VPC only
+# 4. Name: MySecureVPC
+# 5. IPv4 CIDR: 10.0.0.0/16
+# 6. Create VPC
+# CLI Command:
+aws ec2 create-vpc \
+    --cidr-block 10.0.0.0/16 \
+    --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=MySecureVPC}]'
+Command Explanation:
+	• --cidr-block 10.0.0.0/16: Allocates 65,536 IP addresses (10.0.0.0 through 10.0.255.255)
+	• --tag-specifications: Adds metadata tags for organization and billing tracking
+Step 2: Create Subnets
+bash
+# Replace vpc-xxxxxxxxx with your actual VPC ID
+export VPC_ID=vpc-xxxxxxxxx
+# Create public subnet
+aws ec2 create-subnet \
+    --vpc-id $VPC_ID \
+    --cidr-block 10.0.1.0/24 \
+    --availability-zone us-east-1a \
+    --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=PublicSubnet}]'
+# Save the public subnet ID
+export PUBLIC_SUBNET_ID=subnet-xxxxxxxxx
+# Create private subnet
+aws ec2 create-subnet \
+    --vpc-id $VPC_ID \
+    --cidr-block 10.0.2.0/24 \
+    --availability-zone us-east-1a \
+    --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=PrivateSubnet}]'
+Command Explanation:
+	• /24 CIDR provides 256 IP addresses (251 usable after AWS reserves 5)
+	• --availability-zone: Specifies physical location within region
+	• Separate subnets enable network segmentation for security
+Step 3: Internet Gateway Setup
+bash
+# Create internet gateway
+aws ec2 create-internet-gateway \
+    --tag-specifications 'ResourceType=internet-gateway,Tags=[{Key=Name,Value=MyIGW}]'
+# Save the Internet Gateway ID
+export IGW_ID=igw-xxxxxxxxx
+# Attach to VPC
+aws ec2 attach-internet-gateway \
+    --vpc-id $VPC_ID \
+    --internet-gateway-id $IGW_ID
+Command Explanation:
+	• Internet Gateway provides NAT (Network Address Translation) between private and public IPs
+	• Must be attached to VPC before instances can reach the internet
+	• Only one IGW can be attached per VPC
+Step 4: Route Table Configuration
+bash
+# Create route table for public subnet
+aws ec2 create-route-table \
+    --vpc-id $VPC_ID \
+    --tag-specifications 'ResourceType=route-table,Tags=[{Key=Name,Value=PublicRouteTable}]'
+# Save route table ID
+export ROUTE_TABLE_ID=rtb-xxxxxxxxx
+# Add route to internet gateway
+aws ec2 create-route \
+    --route-table-id $ROUTE_TABLE_ID \
+    --destination-cidr-block 0.0.0.0/0 \
+    --gateway-id $IGW_ID
+# Associate route table with public subnet
+aws ec2 associate-route-table \
+    --subnet-id $PUBLIC_SUBNET_ID \
+    --route-table-id $ROUTE_TABLE_ID
+Command Explanation:
+	• 0.0.0.0/0: Default route (all traffic not matching other routes)
+	• Route table association determines which subnets can reach the internet
+	• Private subnet uses default route table (no internet access)
+
+Network Security Controls
+Network Access Control Lists (NACLs)
+Key Concepts
+NACLs are subnet-level firewalls in your VPC that control inbound and outbound traffic.
+1. Stateless Operation
+	• Must explicitly allow both inbound traffic AND outbound response
+	• Unlike Security Groups which are stateful
+	• Requires careful configuration of ephemeral ports
+2. Allow or Deny Rules
+	• Can explicitly allow OR deny traffic
+	• Provides granular control (e.g., block specific IP addresses)
+	• More control than Security Groups (allow-only)
+3. Five-Tuple Rules
+Each rule defined by:
+	• Source IP address
+	• Destination IP address
+	• Source port
+	• Destination port
+	• Protocol (TCP, UDP, ICMP)
+4. Rule Processing
+	• Rules processed in numerical order (lowest to highest)
+	• First match wins - no further evaluation
+	• Best practice: Use gaps (100, 200, 300) for future insertions
+NACL Example: SSH Access
+Scenario: SSH from local machine to EC2 in public subnet
+Local machine uses ephemeral port (e.g., 54321) for connection
+Required NACL Rules:
+✓ Inbound: Allow TCP port 22 from your IP
+✓ Outbound: Allow TCP ports 1024-65535 to your IP (ephemeral range)
+Without outbound rule: Connection fails (no return path)
+Security Groups
+Key Characteristics
+Instance-level firewalls that control traffic to/from EC2 instances.
+1. Stateful Operation
+	• Automatically allows return traffic
+	• No need to configure ephemeral ports manually
+	• Simplifies rule management
+2. Default Behavior
+	• Default Security Group allows all outbound traffic
+	• No inbound traffic allowed unless explicitly permitted
+	• Implicit deny for non-matching traffic
+3. Rule Types
+	• Allow rules only: Cannot create deny rules
+	• Multiple Security Groups: Instance can have multiple SGs
+	• Rule aggregation: All attached SG rules combined
+4. Configuration Simplicity
+	• Define protocol, port, and source/destination
+	• Less granular than NACLs but easier to manage
+	• Applied at instance level, not subnet level
+Security Groups vs NACLs Comparison
+
+Aspect	Security Groups	NACLs
+Level	Instance	Subnet
+State	Stateful	Stateless
+Rules	Allow only	Allow and Deny
+Processing	All rules evaluated	First match wins
+Return Traffic	Automatic	Manual configuration
+
+Hands-On Network Security Demo
+Demo 7: Testing SSH Access with Security Groups and NACLs
+Step 1: Launch EC2 Instance
+bash
+# Create EC2 instance in public subnet
+# Use default security group (no inbound rules)
+# Instance type: t2.micro (free tier)
+# AMI: Amazon Linux 2
+Step 2: Test Initial SSH Access
+bash
+# Attempt SSH connection
+ssh -i MyKeyPair.pem ec2-user@[PUBLIC-IP]
+# Expected Result: ❌ Connection fails
+# Reason: Security group blocks port 22
+Step 3: Update Security Group
+bash
+# Add inbound rule to security group
+# Protocol: TCP
+# Port: 22
+# Source: Your IP address (/32)
+# Test SSH again
+ssh -i MyKeyPair.pem ec2-user@[PUBLIC-IP]
+# Expected Result: ✅ Connection succeeds
+Command Explanation:
+	• /32 CIDR means exactly one IP address (yours)
+	• This follows the principle of least privilege - minimum access required
+	• Any other IP address will be blocked by default
+Step 4: Add Custom NACL
+bash
+# Create custom NACL with restrictive rules
+# Associate with public subnet
+# Initially no rules configured
+# Test SSH access
+ssh -i MyKeyPair.pem ec2-user@[PUBLIC-IP]
+# Expected Result: ❌ Connection fails
+# Reason: NACL blocks traffic
+Step 5: Configure NACL Rules
+bash
+# Add NACL rules:
+# Inbound: Allow TCP port 22 from your IP
+# Outbound: Allow TCP ports 1024-65535 to your IP
+# Test SSH final time
+ssh -i MyKeyPair.pem ec2-user@[PUBLIC-IP]
+# Expected Result: ✅ Connection succeeds
+# Both Security Group and NACL now allow traffic
+Command Explanation:
+	• Ephemeral ports (1024-65535) needed for return SSH traffic
+	• Both security layers must allow traffic for connection to work
+	• This demonstrates defense in depth - multiple security layers
+
+Amazon EC2 Deep Dive
+Elastic Compute Cloud Overview
+Amazon EC2 provides resizable compute capacity in the cloud, designed to make web-scale computing easier for developers.
+Common Use Cases
+	• Hosting web applications
+	• Batch processing large datasets
+	• Running API servers
+	• Providing cloud desktops
+	• Supporting machine learning workloads
+Core EC2 Concepts
+1. Instance Types
+Define CPU, memory, storage, and networking capacity.
+Categories:
+	• General Purpose: Balanced resources for most workloads (t3, m5)
+	• Compute Optimized: High-performance processors for CPU-intensive tasks (c5)
+	• Memory Optimized: Fast performance for memory-intensive applications (r5, x1)
+	• Storage Optimized: High sequential read/write access to large datasets (i3, d2)
+	• Accelerated Computing: Hardware accelerators (GPUs) for ML, HPC (p3, g4)
+2. Root Device Types
+EBS (Elastic Block Store) - Recommended:
+	• Persistent storage (data survives stop/start)
+	• Backup capabilities (snapshots)
+	• Can detach and reattach to different instances
+	• Most commonly used option
+Instance Store - Temporary:
+	• Temporary storage (data lost on stop/termination)
+	• High performance for temporary data
+	• Good for cache, buffers, scratch data
+	• Cannot be backed up
+3. Amazon Machine Images (AMI)
+Blueprint for EC2 instances containing:
+	• Operating system (Linux, Windows)
+	• Pre-installed software packages
+	• Configuration settings
+	• Root device mapping
+AMI Options:
+	• AWS-provided AMIs: Maintained by AWS (Amazon Linux, Ubuntu)
+	• Custom AMIs: Created from your instances
+	• Community AMIs: Shared by other users
+	• Marketplace AMIs: Commercial software solutions
+EC2 Purchase Options
+1. On-Demand Instances
+	• Pay per use, no long-term commitment
+	• Default option for most workloads
+	• Best for short-term or unpredictable workloads
+	• Highest cost but maximum flexibility
+2. Reserved Instances (RIs)
+	• 1 or 3-year commitment for significant discount
+	• Reserves capacity for specific instance type
+	• Best for steady, predictable workloads
+Types:
+	• Standard RIs: Highest savings, no flexibility
+	• Convertible RIs: Can change instance attributes
+	• Scheduled RIs: Run during specific time windows
+Payment Options:
+	• All Upfront: Maximum savings
+	• Partial Upfront: Moderate savings
+	• No Upfront: Some savings, still cheaper than On-Demand
+3. Savings Plans
+	• Flexible pricing model similar to RIs
+	• Apply to EC2, Fargate, and Lambda
+	• Commit to consistent usage ($/hour) for 1-3 years
+	• Up to 72% savings compared to On-Demand
+4. Spot Instances
+	• Use spare EC2 capacity at up to 90% discount
+	• Prices fluctuate based on supply/demand
+	• Can be interrupted with 2-minute notice
+	• Best for fault-tolerant, flexible workloads
+5. Dedicated Hosts
+	• Physical server dedicated for your use
+	• Required for per-server software licensing
+	• Compliance requirements for regulated industries
+	• Most expensive option but provides physical isolation
+Use Case to Purchase Option Mapping
+
+Use Case	Best Option	Reason
+Unpredictable workload	On-Demand	Flexibility needed
+Steady production app	Reserved Instance	Predictable usage
+Batch processing	Spot	Fault tolerant
+Compliance requirements	Dedicated Host	Physical isolation
+Dev/test environments	Savings Plans	Flexible, cost-effective
+
+Amazon S3 Security Integration
+Simple Storage Service Overview
+Amazon S3 stores files (objects) in containers (buckets) with virtually unlimited scalability.
+Key Concepts
+1. Buckets and Objects
+	• Bucket: Container for objects (like a folder)
+	• Object: Individual files stored in buckets
+	• Bucket settings: Apply to all objects (permissions, lifecycle rules)
+2. Durability and Availability
+	• Automatically stores data across multiple AZs
+	• 99.999999999% (11 9's) durability
+	• Designed for high availability and resilience
+3. Access Control
+	• Public access settings and URLs
+	• Bucket policies and object ACLs
+	• Integration with IAM for fine-grained permissions
+4. Static Website Hosting
+	• Host static websites directly from S3
+	• HTML, CSS, JavaScript files
+	• Cost-effective for static content delivery
+S3 Security Integration with EC2
+bash
+# From EC2 instance with IAM role
+aws s3 ls  # Lists buckets - allowed by role ✅
+aws s3api get-bucket-location --bucket [BUCKET-NAME]  # Works ✅
+# Operations denied by role
+aws ec2 describe-instances  # Fails ❌
+aws ec2 run-instances  # Fails ❌
+
+Complete Secure Architecture Implementation
+Final Project: Secure EC2 with S3 Access
+Architecture Overview
+Internet → Internet Gateway → Route Table → Public Subnet → 
+Security Group → EC2 Instance (with IAM Role) → S3 Bucket
+Implementation Steps
+Step 1: VPC and Network Setup
+bash
+# Create VPC with public and private subnets
+# Configure Internet Gateway and routing
+# Set up Security Groups with restrictive rules
+Step 2: IAM Security Configuration
+bash
+# Create EC2 service role with S3 read-only access
+# Configure instance profile for EC2
+# Apply least privilege principles
+Step 3: EC2 Instance Launch
+bash
+# Launch instance in public subnet
+# Attach security group allowing only SSH from your IP
+# Associate IAM role for S3 access
+# Use key pair for SSH authentication
+Step 4: Security Validation
+bash
+# Test SSH connectivity
+# Verify IAM role permissions (S3 access works, EC2 access denied)
+# Confirm network isolation is working
+
+Personal Learning Journey
+Initial Challenges Faced
+	• AWS Console Complexity: Overwhelming number of services and options
+	• Networking Concepts: Understanding VPC, subnets, routing relationships
+	• IAM Complexity: Distinguishing between users, groups, roles, policies
+	• CLI vs Console: Learning when to use which approach for efficiency
+Problem Resolution Strategies
+	1. Started with Console: Visual understanding before moving to CLI automation
+	2. Drew Architecture Diagrams: Visual representation helped solidify concepts
+	3. Incremental Testing: Validated each component before proceeding to next
+	4. Comprehensive Documentation: Recorded all steps, decisions, and troubleshooting
+Key Security Decisions Made
+Network Security
+	• Custom VPC: Better control and security than default VPC
+	• Subnet Segmentation: Public/private subnet separation for defense in depth
+	• Restrictive Security Groups: SSH only from my specific IP address
+	• Network ACLs: Additional layer of subnet-level security controls
+Identity and Access Management
+	• Service Roles: Eliminated hardcoded credentials in instances completely
+	• Least Privilege: S3 read-only access only - can add more permissions later
+	• MFA Protection: Root account secured with multi-factor authentication
+	• Dedicated Keys: Unique SSH key pair created specifically for this project
+Common Mistakes and Learning
+Configuration Errors Encountered
+	• Route Table Association: Initially forgot to associate route table with subnet
+	• Security Group Rules: Confused inbound vs outbound rules initially
+	• IAM Propagation: Learned about eventual consistency delays in AWS
+	• Region Consistency: Importance of working consistently in single region
+Troubleshooting Approaches Developed
+	• Systematic Debugging: Checked each network layer methodically
+	• AWS CLI Validation: Used commands to verify all configurations
+	• Documentation Reference: AWS documentation was invaluable resource
+	• Incremental Changes: Made one change at a time for easier debugging
+Skills and Insights Gained
+	• Security-First Mindset: Every architectural decision evaluated for security impact
+	• Defense in Depth: Multiple security layers provide better protection
+	• Cost Optimization: Free tier and proper sizing prevent unexpected charges
+	• Practical Experience: Hands-on implementation reinforced theoretical knowledge
+
+Real-World Applications and Assessment Framework
+Security Assessment Questions
+Account-Level Security:
+	1. Is MFA enabled on privileged accounts?
+	2. Are IAM users following least privilege principles?
+	3. Are there unused or overprivileged access keys?
+	4. Is there a formal password policy in place?
+Network Architecture Security:
+	1. Are resources deployed in custom VPCs or default VPC?
+	2. How are security groups configured? Any 0.0.0.0/0 rules?
+	3. Is network segmentation properly implemented?
+	4. Are NACLs used for additional defense layers?
+Access Management Security:
+	1. Are EC2 instances using IAM roles or embedded credentials?
+	2. Are policies following least privilege principle?
+	3. Is access regularly audited and reviewed?
+	4. Are service roles used instead of user credentials?
+Common Security Misconfigurations
+High-Risk Issues Found in Organizations
+1. Overprivileged IAM Roles
+bash
+# Red Flag: AdministratorAccess everywhere
+aws iam list-attached-role-policies --role-name [ROLE-NAME]
+# Often find: Applications with full admin access
+# Should be: Specific permissions for specific functions
+2. Network Security Gaps
+bash
+# Red Flag: SSH open to the world
+aws ec2 describe-security-groups \
+    --query 'SecurityGroups[?IpPermissions[?IpRanges[?CidrIp==`0.0.0.0/0`]]]'
+# Often find: 0.0.0.0/0 on ports 22, 3389, 443
+# Should be: Specific IP ranges or VPN access only
+3. Poor Network Design
+bash
+# Red Flag: Everything in public subnets
+aws ec2 describe-instances \
+    --query 'Reservations[*].Instances[*].[InstanceId,SubnetId,PublicIpAddress]'
+# Often find: Databases in public subnets
+# Should be: Multi-tier architecture with proper segmentation
+4. Credential Management Issues
+	• Hardcoded AWS keys in application code
+	• Long-lived access keys without rotation
+	• Shared credentials across multiple applications
+	• No credential rotation policies
+Risk Scenarios and Business Impact
+Scenario 1: Overprivileged Role Compromise
+What Could Happen:
+	• Attacker compromises EC2 instance
+	• Instance has AdministratorAccess role
+	• Attacker gains full control of AWS environment
+	• Can access sensitive data, launch resources, modify security
+Business Impact:
+	• Data breach with regulatory fines
+	• Service disruption and downtime
+	• Reputation damage and customer loss
+	• Incident response and recovery costs
+My Secure Implementation Prevents This:
+	• Role has only S3 read access (least privilege)
+	• Blast radius limited to specific S3 buckets
+	• Cannot launch instances or modify infrastructure
+	• Minimal impact if compromised
+Scenario 2: Network Security Breach
+What Could Happen:
+	• Security groups allow SSH from anywhere (0.0.0.0/0)
+	• Automated attacks scan and find vulnerable instances
+	• Brute force attacks or vulnerability exploitation
+	• Lateral movement within poorly segmented network
+Business Impact:
+	• Unauthorized access to production systems
+	• Data exfiltration possibilities
+	• Compliance violations (PCI, HIPAA, SOX)
+	• Potential ransomware deployment
+My Secure Implementation Prevents This:
+	• SSH restricted to single IP address (/32)
+	• Network segmentation with public/private subnets
+	• Multiple defense layers (Security Groups + NACLs)
+	• Minimal attack surface
+Scenario 3: Credential Exposure
+What Could Happen:
+	• AWS access keys hardcoded in application
+	• Code repository becomes public or is breached
+	• Credentials used maliciously for crypto mining or data theft
+	• Long-lived keys provide persistent access
+Business Impact:
+	• Unexpected AWS charges from resource abuse
+	• Data theft from accessible services
+	• Compliance audit failures
+	• Recovery and credential rotation costs
+My Secure Implementation Prevents This:
+	• No static credentials stored anywhere
+	• IAM roles provide temporary, rotating credentials
+	• Instance metadata service provides secure access
+	• Automatic credential lifecycle management
+
+Advanced Security Concepts and Next Steps
+Week 2 Preview: Advanced Security Services
+CloudTrail (Audit Logging)
+bash
+# API call logging for compliance and forensics
+aws cloudtrail create-trail \
+    --name MySecurityTrail \
+    --s3-bucket-name my-cloudtrail-bucket \
+    --include-global-service-events \
+    --is-multi-region-trail
+VPC Flow Logs (Network Monitoring)
+bash
+# Network traffic logging for security analysis
+aws ec2 create-flow-logs \
+    --resource-type VPC \
+    --resource-ids $VPC_ID \
+    --traffic-type ALL \
+    --log-destination-type cloud-watch-logs
+AWS Config (Compliance Monitoring)
+bash
+# Configuration compliance monitoring
+aws configservice put-configuration-recorder \
+    --configuration-recorder file://recorder.json
+Recommended Learning Path
+Week 2: Storage Security and Monitoring
+	• S3 bucket security and encryption
+	• CloudTrail implementation
+	• CloudWatch monitoring and alerting
+	• AWS Config compliance rules
+Week 3: Advanced Networking
+	• VPC peering and transit gateways
+	• AWS Direct Connect and VPN
+	• Network Load Balancers and security
+	• AWS WAF implementation
+Week 4: Container and Serverless Security
+	• ECS and Fargate security
+	• Lambda function security
+	• API Gateway security controls
+	• Container image scanning
+
+Essential Commands Reference
+Identity and Account Management
+bash
+# Verify current identity
+aws sts get-caller-identity
+# List IAM users and roles
+aws iam list-users
+aws iam list-roles
+# Check attached policies
+aws iam list-attached-user-policies --user-name [USERNAME]
+aws iam list-attached-role-policies --role-name [ROLENAME]
+VPC and Networking
+bash
+# List VPCs and subnets
+aws ec2 describe-vpcs
+aws ec2 describe-subnets
+# Check security groups and NACLs
+aws ec2 describe-security-groups
+aws ec2 describe-network-acls
+# Verify internet gateways and routing
+aws ec2 describe-internet-gateways
+aws ec2 describe-route-tables
+EC2 Instance Management
+bash
+# List instances and their states
+aws ec2 describe-instances
+# Check instance security groups and IAM roles
+aws ec2 describe-instances \
+    --query 'Reservations[*].Instances[*].[InstanceId,SecurityGroups,IamInstanceProfile]'
+# Manage key pairs
+aws ec2 describe-key-pairs
+aws ec2 create-key-pair --key-name [KEYNAME]
+Security Validation
+bash
+# Find overly permissive security groups
+aws ec2 describe-security-groups \
+    --query 'SecurityGroups[?IpPermissions[?IpRanges[?CidrIp==`0.0.0.0/0`]]]'
+# Check for instances without IAM roles
+aws ec2 describe-instances \
+    --query 'Reservations[*].Instances[?!IamInstanceProfile].[InstanceId,Tags[?Key==`Name`].Value|[0]]'
+# Verify MFA status for users
+aws iam list-mfa-devices --user-name [USERNAME]
+
+Key Takeaways and Success Metrics
+Technical Mastery Achieved
+✅ Account Security Foundation
+	• Root account properly secured with MFA
+	• IAM admin user created for daily operations
+	• Billing alerts configured to prevent surprises
+	• CLI properly configured and tested
+✅ Identity and Access Management
+	• Understanding of users, groups, roles, and policies
+	• Hands-on experience with least privilege principle
+	• Service roles implementation for EC2-S3 integration
+	• Policy creation and attachment procedures
+✅ Network Architecture Security
+	• Custom VPC creation with proper CIDR planning
+	• Public/private subnet segmentation strategy
+	• Internet Gateway and routing configuration
+	• Security Groups and NACLs implementation
+✅ Secure Compute Implementation
+	• EC2 instance launch with security best practices
+	• SSH key pair generation and management
+	• Security group configuration with restrictive rules
+	• IAM role integration for service authentication
+Skills and Value Delivered
+Security Assessment Skills:
+	• Can evaluate AWS security posture systematically
+	• Identify common misconfigurations and vulnerabilities
+	• Understand compliance implications and requirements
+	• Provide actionable remediation recommendations
+Architecture Design Capabilities:
+	• Design security-first AWS architectures
+	• Implement defense-in-depth strategies
+	• Create proper network segmentation
+	• Establish least privilege access patterns
+Business Risk Communication:
+	• Translate technical risks to business impact
+	• Quantify potential breach costs and consequences
+	• Demonstrate ROI of security investments
+	• Enable informed decision making by stakeholders
+Next Week Preparation
+Skills to Build:
+	• S3 bucket security and encryption implementation
+	• CloudTrail audit logging configuration
+	• CloudWatch monitoring and alerting setup
+	• AWS Config compliance rule deployment
+Business Applications:
+	• Data protection and privacy compliance
+	• Incident detection and response capabilities
+	• Automated compliance reporting
+	• Cost optimization through monitoring
+This comprehensive foundation in AWS security architecture provides the essential knowledge and practical experience needed for advanced cloud security work. The security-first mindset established here applies to all future AWS services and architectures you'll encounter.# Week 1: AWS Cloud Architecture - Security-First Approach
+Overview
+This comprehensive guide covers building AWS cloud infrastructure with a security-first mindset - where security is the foundation, not an add-on. Every architectural decision starts with the question: "Is this secure?"
+Key Learning Objectives:
+	• Understand AWS Shared Responsibility Model and infrastructure building blocks
+	• Master Identity and Access Management (IAM) fundamentals with hands-on demos
+	• Design secure Virtual Private Cloud (VPC) architecture from scratch
+	• Launch secure EC2 instances with proper security controls
+	• Implement security best practices and cost optimization strategies
+	• Complete 7 live demonstrations with CLI commands and explanations
