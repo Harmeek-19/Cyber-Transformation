@@ -55,6 +55,20 @@ This document contains **only** the CLI commands actually used in the 7 AWS Secu
 | `aws ec2 describe-instances` | Test EC2 access from EC2 instance | Fails because role doesn't include EC2 permissions |
 | `curl http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroleec2s3` | Show temporary credentials | Display auto-rotating credentials from EC2 metadata |
 
+Yes — the command must be run with the IP 169.254.169.254 only.
+
+✅ Why?
+This IP is hardcoded by AWS as the endpoint for the Instance Metadata Service (IMDS). It’s a special internal IP that only works inside an EC2 instance. You cannot replace it with the instance’s public or private IP.
+
+🔐 What Happens When You Run It?
+When you run:
+
+
+The EC2 instance connects to the metadata service running at that IP.
+It fetches temporary credentials for the IAM role named iamroleec2s3.
+🧠 Quick Analogy
+Think of 169.254.169.254 like a local help desk inside your EC2 instance. It’s always there, always at the same address, and only your instance can talk to it.
+
 ### Role Flow Demonstration:
 1. **Before role:** `aws s3 ls --profile neil2` → Access Denied ❌
 2. **Assume role:** Get temporary credentials from assume-role command
