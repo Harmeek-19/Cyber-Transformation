@@ -48,3 +48,8 @@ Credentials:
   "Expiration" : "2025-08-07T17:06:11Z"
 }
 AWS CLI Identity:
+^C
+
+S3 Test:
+^C
+[ec2-user@ip-10-0-1-5 ~]$
