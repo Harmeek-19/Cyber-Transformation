@@ -434,4 +434,329 @@ C:\Users\E114963\Downloads>aws ec2 describe-instances --instance-ids i-0642aa798
 }
 
 
-C:\Users\E114963\Downloads>
+C:\Users\E114963\Downloads>aws ec2 describe-security-groups --group-ids sg-0b6120249b37d52c6
+{
+    "SecurityGroups": [
+        {
+            "GroupId": "sg-0b6120249b37d52c6",
+            "IpPermissionsEgress": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ],
+            "VpcId": "vpc-045ada19755bf2191",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:733366527973:security-group/sg-0b6120249b37d52c6",
+            "OwnerId": "733366527973",
+            "GroupName": "test-sg",
+            "Description": "test-sg",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 22,
+                    "ToPort": 22,
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "130.41.61.150/32"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        }
+    ]
+}
+
+
+C:\Users\E114963\Downloads>aws ec2 describe-subnets --filters "Name=vpc-id,Values=vpc-045ada19755bf2191"
+{
+    "Subnets": [
+        {
+            "AvailabilityZoneId": "use1-az1",
+            "MapCustomerOwnedIpOnLaunch": false,
+            "OwnerId": "733366527973",
+            "AssignIpv6AddressOnCreation": false,
+            "Ipv6CidrBlockAssociationSet": [],
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "private-subnet"
+                }
+            ],
+            "SubnetArn": "arn:aws:ec2:us-east-1:733366527973:subnet/subnet-0f582a497ad8233f0",
+            "EnableDns64": false,
+            "Ipv6Native": false,
+            "PrivateDnsNameOptionsOnLaunch": {
+                "HostnameType": "ip-name",
+                "EnableResourceNameDnsARecord": false,
+                "EnableResourceNameDnsAAAARecord": false
+            },
+            "BlockPublicAccessStates": {
+                "InternetGatewayBlockMode": "off"
+            },
+            "SubnetId": "subnet-0f582a497ad8233f0",
+            "State": "available",
+            "VpcId": "vpc-045ada19755bf2191",
+            "CidrBlock": "10.0.2.0/24",
+            "AvailableIpAddressCount": 251,
+            "AvailabilityZone": "us-east-1a",
+            "DefaultForAz": false,
+            "MapPublicIpOnLaunch": false
+        },
+        {
+            "AvailabilityZoneId": "use1-az1",
+            "MapCustomerOwnedIpOnLaunch": false,
+            "OwnerId": "733366527973",
+            "AssignIpv6AddressOnCreation": false,
+            "Ipv6CidrBlockAssociationSet": [],
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "public-subnet"
+                }
+            ],
+            "SubnetArn": "arn:aws:ec2:us-east-1:733366527973:subnet/subnet-05903635218ff000c",
+            "EnableDns64": false,
+            "Ipv6Native": false,
+            "PrivateDnsNameOptionsOnLaunch": {
+                "HostnameType": "ip-name",
+                "EnableResourceNameDnsARecord": false,
+                "EnableResourceNameDnsAAAARecord": false
+            },
+            "BlockPublicAccessStates": {
+                "InternetGatewayBlockMode": "off"
+            },
+            "SubnetId": "subnet-05903635218ff000c",
+            "State": "available",
+            "VpcId": "vpc-045ada19755bf2191",
+            "CidrBlock": "10.0.1.0/24",
+            "AvailableIpAddressCount": 250,
+            "AvailabilityZone": "us-east-1a",
+            "DefaultForAz": false,
+            "MapPublicIpOnLaunch": true
+        }
+    ]
+}
+
+
+C:\Users\E114963\Downloads>aws ec2 describe-route-tables --filters "Name=vpc-id,Values=vpc-045ada19755bf2191
+{
+    "RouteTables": [
+        {
+            "Associations": [
+                {
+                    "Main": false,
+                    "RouteTableAssociationId": "rtbassoc-0f2df181d1c6ac075",
+                    "RouteTableId": "rtb-0e4c0a171e47f976d",
+                    "SubnetId": "subnet-05903635218ff000c",
+                    "AssociationState": {
+                        "State": "associated"
+                    }
+                }
+            ],
+            "PropagatingVgws": [],
+            "RouteTableId": "rtb-0e4c0a171e47f976d",
+            "Routes": [
+                {
+                    "DestinationCidrBlock": "10.0.0.0/16",
+                    "GatewayId": "local",
+                    "Origin": "CreateRouteTable",
+                    "State": "active"
+                },
+                {
+                    "DestinationCidrBlock": "0.0.0.0/0",
+                    "GatewayId": "igw-060444d92ba7c165d",
+                    "Origin": "CreateRoute",
+                    "State": "active"
+                }
+            ],
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "public-rt"
+                }
+            ],
+            "VpcId": "vpc-045ada19755bf2191",
+            "OwnerId": "733366527973"
+        },
+        {
+            "Associations": [
+                {
+                    "Main": false,
+                    "RouteTableAssociationId": "rtbassoc-0b1916598f15b4eb5",
+                    "RouteTableId": "rtb-075617bf1d29ca532",
+                    "SubnetId": "subnet-0f582a497ad8233f0",
+                    "AssociationState": {
+                        "State": "associated"
+                    }
+                }
+            ],
+            "PropagatingVgws": [],
+            "RouteTableId": "rtb-075617bf1d29ca532",
+            "Routes": [
+                {
+                    "DestinationCidrBlock": "10.0.0.0/16",
+                    "GatewayId": "local",
+                    "Origin": "CreateRouteTable",
+                    "State": "active"
+                }
+            ],
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "private-rt"
+                }
+            ],
+            "VpcId": "vpc-045ada19755bf2191",
+            "OwnerId": "733366527973"
+        },
+        {
+            "Associations": [
+                {
+                    "Main": true,
+                    "RouteTableAssociationId": "rtbassoc-07641ac0906404cec",
+                    "RouteTableId": "rtb-02788d2f6f283a677",
+                    "AssociationState": {
+                        "State": "associated"
+                    }
+                }
+            ],
+            "PropagatingVgws": [],
+            "RouteTableId": "rtb-02788d2f6f283a677",
+            "Routes": [
+                {
+                    "DestinationCidrBlock": "10.0.0.0/16",
+                    "GatewayId": "local",
+                    "Origin": "CreateRouteTable",
+                    "State": "active"
+                }
+            ],
+            "Tags": [],
+            "VpcId": "vpc-045ada19755bf2191",
+            "OwnerId": "733366527973"
+        }
+    ]
+}
+
+
+C:\Users\E114963\Downloads>aws ec2 describe-internet-gateways --filters "Name=attachment.vpc-id,Values=vpc-045ada19755bf2191"
+{
+    "InternetGateways": [
+        {
+            "Attachments": [
+                {
+                    "State": "available",
+                    "VpcId": "vpc-045ada19755bf2191"
+                }
+            ],
+            "InternetGatewayId": "igw-060444d92ba7c165d",
+            "OwnerId": "733366527973",
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "test-igw"
+                }
+            ]
+        }
+    ]
+}
+
+
+C:\Users\E114963\Downloads>aws ec2 describe-network-acls --network-acl-ids acl-0f664344526221329
+{
+    "NetworkAcls": [
+        {
+            "Associations": [
+                {
+                    "NetworkAclAssociationId": "aclassoc-03ce4698f2000ea5e",
+                    "NetworkAclId": "acl-0f664344526221329",
+                    "SubnetId": "subnet-05903635218ff000c"
+                },
+                {
+                    "NetworkAclAssociationId": "aclassoc-0a290df2a294cffce",
+                    "NetworkAclId": "acl-0f664344526221329",
+                    "SubnetId": "subnet-0f582a497ad8233f0"
+                }
+            ],
+            "Entries": [
+                {
+                    "CidrBlock": "130.41.61.150/32",
+                    "Egress": true,
+                    "PortRange": {
+                        "From": 1024,
+                        "To": 65535
+                    },
+                    "Protocol": "6",
+                    "RuleAction": "allow",
+                    "RuleNumber": 100
+                },
+                {
+                    "CidrBlock": "0.0.0.0/0",
+                    "Egress": true,
+                    "PortRange": {
+                        "From": 80,
+                        "To": 80
+                    },
+                    "Protocol": "6",
+                    "RuleAction": "allow",
+                    "RuleNumber": 200
+                },
+                {
+                    "CidrBlock": "0.0.0.0/0",
+                    "Egress": true,
+                    "PortRange": {
+                        "From": 443,
+                        "To": 443
+                    },
+                    "Protocol": "6",
+                    "RuleAction": "allow",
+                    "RuleNumber": 300
+                },
+                {
+                    "CidrBlock": "0.0.0.0/0",
+                    "Egress": true,
+                    "Protocol": "-1",
+                    "RuleAction": "deny",
+                    "RuleNumber": 32767
+                },
+                {
+                    "CidrBlock": "130.41.61.150/32",
+                    "Egress": false,
+                    "PortRange": {
+                        "From": 22,
+                        "To": 22
+                    },
+                    "Protocol": "6",
+                    "RuleAction": "allow",
+                    "RuleNumber": 100
+                },
+                {
+                    "CidrBlock": "0.0.0.0/0",
+                    "Egress": false,
+                    "Protocol": "-1",
+                    "RuleAction": "deny",
+                    "RuleNumber": 32767
+                }
+            ],
+            "IsDefault": false,
+            "NetworkAclId": "acl-0f664344526221329",
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "test-nacl"
+                }
+            ],
+            "VpcId": "vpc-045ada19755bf2191",
+            "OwnerId": "733366527973"
+        }
+    ]
+}
