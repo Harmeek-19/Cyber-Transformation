@@ -264,3 +264,174 @@ curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta
 - Session-based authentication with token expiration
 - Ensures only legitimate applications access credentials
 - Required on modern AWS instances for compliance
+
+
+C:\Users\E114963\Downloads>aws ec2 describe-instances --instance-ids i-0642aa798338cce4a
+{
+    "Reservations": [
+        {
+            "ReservationId": "r-0024bfc0bad430b18",
+            "OwnerId": "733366527973",
+            "Groups": [],
+            "Instances": [
+                {
+                    "Architecture": "x86_64",
+                    "BlockDeviceMappings": [
+                        {
+                            "DeviceName": "/dev/xvda",
+                            "Ebs": {
+                                "AttachTime": "2025-08-07T09:44:36+00:00",
+                                "DeleteOnTermination": true,
+                                "Status": "attached",
+                                "VolumeId": "vol-010f38b4ce929d71b"
+                            }
+                        }
+                    ],
+                    "ClientToken": "6906317a-6cf5-4272-b67a-383945e3cf33",
+                    "EbsOptimized": true,
+                    "EnaSupport": true,
+                    "Hypervisor": "xen",
+                    "IamInstanceProfile": {
+                        "Arn": "arn:aws:iam::733366527973:instance-profile/iamroletestingec2s3",
+                        "Id": "AIPA2VQANE7S342GWJYE2"
+                    },
+                    "NetworkInterfaces": [
+                        {
+                            "Association": {
+                                "IpOwnerId": "amazon",
+                                "PublicDnsName": "ec2-44-198-164-135.compute-1.amazonaws.com",
+                                "PublicIp": "44.198.164.135"
+                            },
+                            "Attachment": {
+                                "AttachTime": "2025-08-07T09:44:35+00:00",
+                                "AttachmentId": "eni-attach-088e80e5470dd1ce1",
+                                "DeleteOnTermination": true,
+                                "DeviceIndex": 0,
+                                "Status": "attached",
+                                "NetworkCardIndex": 0
+                            },
+                            "Description": "",
+                            "Groups": [
+                                {
+                                    "GroupId": "sg-0b6120249b37d52c6",
+                                    "GroupName": "test-sg"
+                                }
+                            ],
+                            "Ipv6Addresses": [],
+                            "MacAddress": "02:12:49:6b:0e:49",
+                            "NetworkInterfaceId": "eni-0541cd37dbeeb1b60",
+                            "OwnerId": "733366527973",
+                            "PrivateDnsName": "ip-10-0-1-5.ec2.internal",
+                            "PrivateIpAddress": "10.0.1.5",
+                            "PrivateIpAddresses": [
+                                {
+                                    "Association": {
+                                        "IpOwnerId": "amazon",
+                                        "PublicDnsName": "ec2-44-198-164-135.compute-1.amazonaws.com",
+                                        "PublicIp": "44.198.164.135"
+                                    },
+                                    "Primary": true,
+                                    "PrivateDnsName": "ip-10-0-1-5.ec2.internal",
+                                    "PrivateIpAddress": "10.0.1.5"
+                                }
+                            ],
+                            "SourceDestCheck": true,
+                            "Status": "in-use",
+                            "SubnetId": "subnet-05903635218ff000c",
+                            "VpcId": "vpc-045ada19755bf2191",
+                            "InterfaceType": "interface",
+                            "Operator": {
+                                "Managed": false
+                            }
+                        }
+                    ],
+                    "RootDeviceName": "/dev/xvda",
+                    "RootDeviceType": "ebs",
+                    "SecurityGroups": [
+                        {
+                            "GroupId": "sg-0b6120249b37d52c6",
+                            "GroupName": "test-sg"
+                        }
+                    ],
+                    "SourceDestCheck": true,
+                    "Tags": [
+                        {
+                            "Key": "Name",
+                            "Value": "test-web-server"
+                        }
+                    ],
+                    "VirtualizationType": "hvm",
+                    "CpuOptions": {
+                        "CoreCount": 1,
+                        "ThreadsPerCore": 2
+                    },
+                    "CapacityReservationSpecification": {
+                        "CapacityReservationPreference": "open"
+                    },
+                    "HibernationOptions": {
+                        "Configured": false
+                    },
+                    "MetadataOptions": {
+                        "State": "applied",
+                        "HttpTokens": "required",
+                        "HttpPutResponseHopLimit": 2,
+                        "HttpEndpoint": "enabled",
+                        "HttpProtocolIpv6": "disabled",
+                        "InstanceMetadataTags": "disabled"
+                    },
+                    "EnclaveOptions": {
+                        "Enabled": false
+                    },
+                    "BootMode": "uefi-preferred",
+                    "PlatformDetails": "Linux/UNIX",
+                    "UsageOperation": "RunInstances",
+                    "UsageOperationUpdateTime": "2025-08-07T09:44:35+00:00",
+                    "PrivateDnsNameOptions": {
+                        "HostnameType": "ip-name",
+                        "EnableResourceNameDnsARecord": false,
+                        "EnableResourceNameDnsAAAARecord": false                    },
+                    "MaintenanceOptions": {
+                        "AutoRecovery": "default",
+                        "RebootMigration": "default"
+                    },
+                    "CurrentInstanceBootMode": "uefi",
+                    "NetworkPerformanceOptions": {
+                        "BandwidthWeighting": "default"
+                    },
+                    "Operator": {
+                        "Managed": false
+                    },
+                    "InstanceId": "i-0642aa798338cce4a",
+                    "ImageId": "ami-084a7d336e816906b",
+                    "State": {
+                        "Code": 16,
+                        "Name": "running"
+                    },
+                    "PrivateDnsName": "ip-10-0-1-5.ec2.internal",
+                    "PublicDnsName": "ec2-44-198-164-135.compute-1.amazonaws.com",
+                    "StateTransitionReason": "",
+                    "KeyName": "myfirstkey",
+                    "AmiLaunchIndex": 0,
+                    "ProductCodes": [],
+                    "InstanceType": "t3.micro",
+                    "LaunchTime": "2025-08-07T09:44:35+00:00",
+                    "Placement": {
+                        "GroupName": "",
+                        "Tenancy": "default",
+                        "AvailabilityZone": "us-east-1a"
+                    },
+                    "Monitoring": {
+                        "State": "disabled"
+                    },
+                    "SubnetId": "subnet-05903635218ff000c",
+                    "VpcId": "vpc-045ada19755bf2191",
+                    "PrivateIpAddress": "10.0.1.5",
+                    "PublicIpAddress": "44.198.164.135"
+                }
+            ]
+        }
+    ]
+}
+
+
+C:\Users\E114963\Downloads>
