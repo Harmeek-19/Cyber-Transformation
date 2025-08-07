@@ -6,6 +6,36 @@ This document contains **only** the CLI commands actually used in the 7 AWS Secu
 
 ---
 
+## 🔒 Instance Metadata Service (IMDS) Commands
+
+### IMDSv1 vs IMDSv2 Security
+
+Modern EC2 instances often require **IMDSv2** (Instance Metadata Service version 2) for enhanced security. This requires token-based authentication instead of simple GET requests.
+
+| Command Type | IMDSv1 (Legacy) | IMDSv2 (Secure - Required) |
+|--------------|-----------------|----------------------------|
+| **Token Generation** | Not required | `TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)` |
+| **Role Name Retrieval** | `curl http://169.254.169.254/latest/meta-data/iam/security-credentials/` | `curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/` |
+| **Credential Retrieval** | `curl http://169.254.169.254/latest/meta-data/iam/security-credentials/[ROLE-NAME]` | `curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/[ROLE-NAME]` |
+
+### Why IMDSv2 is Required:
+
+**Security Benefits:**
+- **SSRF Attack Prevention:** Two-step process prevents Server-Side Request Forgery attacks
+- **Session Management:** Tokens expire (configurable 1 second to 6 hours)  
+- **Intent Verification:** PUT request + header proves intentional access
+- **Defense in Depth:** Additional security layer beyond IAM roles
+
+**Instance Configuration:**
+- **`"HttpTokens": "required"`** - Only IMDSv2 allowed (modern default)
+- **`"HttpTokens": "optional"`** - Both IMDSv1 and IMDSv2 allowed (legacy)
+- **`"HttpTokens": "disabled"`** - No metadata access allowed
+
+### Demo Context:
+> *"Modern AWS instances use IMDSv2 by default for security. The token-based authentication prevents malicious applications from accidentally accessing instance credentials through common web vulnerabilities."*
+
+---
+
 ## 🔧 Demo 1: Account Security Foundation
 
 ### Commands Used:
@@ -53,21 +83,9 @@ This document contains **only** the CLI commands actually used in the 7 AWS Secu
 | `aws s3 ls` | Test S3 access with assumed role | Works after assuming role (using temporary credentials) |
 | `aws s3 ls` | Test S3 access from EC2 instance | Demonstrates automatic role assumption by EC2 |
 | `aws ec2 describe-instances` | Test EC2 access from EC2 instance | Fails because role doesn't include EC2 permissions |
-| `curl http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroleec2s3` | Show temporary credentials | Display auto-rotating credentials from EC2 metadata |
-
-Yes — the command must be run with the IP 169.254.169.254 only.
-
-✅ Why?
-This IP is hardcoded by AWS as the endpoint for the Instance Metadata Service (IMDS). It’s a special internal IP that only works inside an EC2 instance. You cannot replace it with the instance’s public or private IP.
-
-🔐 What Happens When You Run It?
-When you run:
-
-
-The EC2 instance connects to the metadata service running at that IP.
-It fetches temporary credentials for the IAM role named iamroleec2s3.
-🧠 Quick Analogy
-Think of 169.254.169.254 like a local help desk inside your EC2 instance. It’s always there, always at the same address, and only your instance can talk to it.
+| `TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)` | Get IMDSv2 authentication token | Required for secure metadata access on modern instances |
+| `curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/` | List available IAM role credentials | Shows role name attached to instance |
+| `curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroleec2s3` | Show instance credentials | Display temporary, auto-rotating credentials |
 
 ### Role Flow Demonstration:
 1. **Before role:** `aws s3 ls --profile neil2` → Access Denied ❌
@@ -139,10 +157,12 @@ Think of 169.254.169.254 like a local help desk inside your EC2 instance. It’s
 | `aws s3api list-buckets` | Test detailed S3 operations | Should work - demonstrates S3 permissions |
 | `aws ec2 describe-instances` | Test EC2 management from EC2 | Should fail - role doesn't include EC2 permissions |
 | `aws iam list-users` | Test IAM access from EC2 | Should fail - role doesn't include IAM permissions |
-| `curl http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroleec2s3` | Show instance credentials | Display temporary, auto-rotating credentials |
-| `curl http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroleec2s3 | grep Expiration` | Show credential expiration | Display when credentials expire (6-hour rotation) |
+| `TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)` | Get IMDSv2 authentication token | Required for secure metadata access on modern instances |
+| `curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/` | List available IAM role credentials | Shows role name attached to instance |
+| `curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroleec2s3` | Show instance credentials | Display temporary, auto-rotating credentials |
+| `curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroleec2s3 \| grep Expiration` | Show credential expiration | Display when credentials expire (6-hour rotation) |
 | `ls -la ~/.aws/` | Check for credential files | Should show no files - proves no hardcoded credentials |
-| `env | grep -i aws` | Check environment variables | Should show no AWS variables - proves no hardcoded credentials |
+| `env \| grep -i aws` | Check environment variables | Should show no AWS variables - proves no hardcoded credentials |
 
 ### Complete Validation Results:
 
@@ -173,7 +193,8 @@ Think of 169.254.169.254 like a local help desk inside your EC2 instance. It’s
 
 ### **Role Management:**
 - `aws sts assume-role` - Switch to different permissions
-- `curl http://169.254.169.254/latest/meta-data/iam/security-credentials/` - Show automatic credentials
+- `TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)` - Get secure metadata token
+- `curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/` - Show automatic credentials
 
 ### **Infrastructure Verification:**
 - `aws ec2 describe-vpcs` - Show network architecture
@@ -227,4 +248,19 @@ Think of 169.254.169.254 like a local help desk inside your EC2 instance. It’s
 - S3 commands working when permissions allow
 - EC2/IAM commands failing when permissions deny
 - Temporary credentials showing expiration times
+- IMDSv2 token authentication working on modern instances
 
+### **IMDSv2 Security Note:**
+Modern EC2 instances require **IMDSv2** (Instance Metadata Service version 2) for enhanced security. Always use token-based authentication:
+
+```bash
+# Required pattern for modern instances
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
+curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/[ROLE-NAME]
+```
+
+**Security Benefits:**
+- Prevents SSRF (Server-Side Request Forgery) attacks
+- Session-based authentication with token expiration
+- Ensures only legitimate applications access credentials
+- Required on modern AWS instances for compliance
