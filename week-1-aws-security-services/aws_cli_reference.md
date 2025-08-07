@@ -228,11 +228,3 @@ Think of 169.254.169.254 like a local help desk inside your EC2 instance. It’s
 - EC2/IAM commands failing when permissions deny
 - Temporary credentials showing expiration times
 
-
-
-An error occurred (UnauthorizedOperation) when calling the DescribeInstances operation: You are not authorized to perform this operation. User: arn:aws:sts::733366527973:assumed-role/iamroletestingec2s3/i-0a3f7cb85bd553846 is not authorized to perform: ec2:DescribeInstances because no identity-based policy allows the ec2:DescribeInstances action
-[ec2-user@ip-172-31-47-228 ~]$ curl http://169.254.169.254/latest/meta-data/iam/security-credentials/
-[ec2-user@ip-172-31-47-228 ~]$ curl http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroletestingec2s3
-[ec2-user@ip-172-31-47-228 ~]$ http://169.254.169.254/latest/meta-data/iam/info
--bash: http://169.254.169.254/latest/meta-data/iam/info: No such file or directory
-[ec2-user@ip-172-31-47-228 ~]$
