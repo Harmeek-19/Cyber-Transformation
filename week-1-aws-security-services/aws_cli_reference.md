@@ -230,125 +230,31 @@ Think of 169.254.169.254 like a local help desk inside your EC2 instance. It’s
 
 Perfect! I can see exactly what's happening. Your setup is working correctly, but there are two issues:
 
-## **🎯 Great News: Your Setup is Working!**
-
-Looking at your output, I can see:
-
-1. **✅ IAM Role is attached:** `"IamInstanceProfile": { "Arn": "arn:aws:iam::733366527973:instance-profile/iamroletestingec2s3"`
-2. **✅ S3 access works:** `aws s3 ls` successfully listed your buckets
-3. **✅ No hardcoded credentials:** The role is providing access automatically
-
-## **🔍 Two Issues to Fix:**
-
-### **Issue 1: IMDSv2 is Required**
-
-In your instance metadata, I see:
-```json
-"HttpTokens": "required"
-```
-
-This means your instance requires **IMDSv2** (Instance Metadata Service version 2), which needs a token for security.
-
-### **Issue 2: Wrong Role Name in URL**
-
-Your instance profile is named `iamroletestingec2s3`, but you need to check what the actual **role name** is inside that profile.
-
-## **🛠️ Solutions:**
-
-### **Step 1: Use IMDSv2 to Access Metadata**
-
-SSH back into your EC2 instance and run:
-
-```bash
-# Get a token first (required for IMDSv2)
-TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
-
-# Check if we got a token
-echo "Token received: $TOKEN"
-
-# Use token to get available credential names
-curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/
-```
-
-This should return the actual role name.
-
-### **Step 2: Get the Credentials**
-
-Once you get the role name from Step 1, use it:
-
-```bash
-# Use the actual role name returned from previous command
-curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/[ACTUAL-ROLE-NAME]
-```
-
-### **Step 3: Check Instance Profile Contents (From Local Machine)**
-
-From your Windows machine, check what role is actually in the instance profile:
-
-```powershell
-aws iam get-instance-profile --instance-profile-name iamroletestingec2s3
-```
-
-This will show you the exact role name inside the instance profile.
-
-## **🎯 For Your Demo - Working Commands:**
-
-Here's what you should use in your presentation:
-
-```bash
-# SSH into EC2 instance
-ssh -i myfirstkey.pem ec2-user@34.207.250.126
-
-# Show S3 access works (this proves the role is working)
-aws s3 ls
-
-# Show no hardcoded credentials
-ls -la ~/.aws/
-env | grep -i aws
-
-# Get metadata token (required for this instance)
-TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
-
-# Show available credentials
-curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/
-
-# Get actual credentials (use role name from above)
-curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/[ROLE-NAME]
-
-# Test permission boundaries
-aws ec2 describe-instances  # Should fail
-aws iam list-users          # Should fail
-```
-
-## **💡 Key Demo Points:**
-
-### **What's Working Perfectly:**
-1. **✅ Role attachment:** Instance profile is properly attached
-2. **✅ S3 access:** `aws s3 ls` works without any credential files
-3. **✅ Security:** No hardcoded credentials anywhere
-4. **✅ IMDSv2:** Your instance is using the more secure metadata service
-
-### **For Your Presentation:**
-> *"Notice that S3 access works perfectly even though we have no credential files. The IAM role provides temporary, auto-rotating credentials that are managed entirely by AWS. This instance is also using IMDSv2, which is the more secure version of the metadata service that requires token-based authentication."*
-
-## **🚀 Demo Script:**
-
-```bash
-# 1. Show S3 works
-aws s3 ls
-echo "✅ S3 access working with IAM role"
-
-# 2. Show no credentials stored
-ls -la ~/.aws/ 2>/dev/null || echo "✅ No credential files found"
-env | grep -i aws || echo "✅ No AWS environment variables"
-
-# 3. Show temporary credentials (with IMDSv2)
-TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
-echo "Role name available:"
-curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/
-
-# 4. Show permission boundaries work
-aws ec2 describe-instances && echo "❌ This should have failed!" || echo "✅ EC2 access properly denied"
-```
-
-Your setup is actually working perfectly - you just need to use IMDSv2 to access the metadata!
+C:\Users\E114963\Downloads>ssh -i myfirstkey.pem ec2-user@34.207.250.126
+   ,     #_
+   ~\_  ####_        Amazon Linux 2023
+  ~~  \_#####\
+  ~~     \###|
+  ~~       \#/ ___   https://aws.amazon.com/linux/amazon-linux-2023
+   ~~       V~' '->
+    ~~~         /
+      ~~._.   _/
+         _/ _/
+       _/m/'
+Last login: Thu Aug  7 05:45:22 2025 from 130.41.61.150
+[ec2-user@ip-172-31-46-189 ~]$ TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
+[ec2-user@ip-172-31-46-189 ~]$ echo "Token received: $TOKEN"
+Token received: AQAEAGzrZnR_yvZ5yrAVsDx1Vkbfy82jPuJxMg3tCEcOClH-vBZKAQ==
+[ec2-user@ip-172-31-46-189 ~]$ curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/
+iamroletestingec2s3[ec2-user@ipcurl -H "X-aws-ec2-metadata-token
+: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/securit
+y-credentials/iamroletestingec2s3
+{
+  "Code" : "Success",
+  "LastUpdated" : "2025-08-07T05:43:46Z",
+  "Type" : "AWS-HMAC",
+  "AccessKeyId" : "ASIA2VQANE7SUTPVYGWD",
+  "SecretAccessKey" : "UJYZt+pCY5+YfNWa5M7/XwnZxlN6nDP+eofC0731",
+  "Token" : "IQoJb3JpZ2luX2VjEE4aCXVzLWVhc3QtMSJHMEUCIE4aDd6z3m1S2Cw9TrIl5/Osht3BrVeVbphYGtk53/+xAiEA3OZIpLKdoRWDmfgPaXAm9HZ5GQ9QZj9JKAoecDQRwQgqxQUIh///////////ARAAGgw3MzMzNjY1Mjc5NzMiDM5hHgMVDxfVGOSorSqZBcIcGPqQdiJGyK9dV0BpBroKZeolQeSbFHsRdKqed7g3uDMu7ZPwD65etMHrptTUynd9BrlfwdoZ6BAbTo7NeukTr0DpWX4vFwAdwre48aXsenVRWNBQAhI66bWxFSZKI7zO7yCiMSsQaKhBLjqFtHXD8c2uoABwo1lSKCfS2LzRbtlpsZDiS1RPl5vyTaX7gkBSpDfF4XE3VEz4YFDS22xUSwvgauMnfWpLriZ0m7VASx33gx1TiUL+WhArNSb6MrlDbVv8zis925rMFfp9TvkuX5LDaZbZh2WAEeiRyajrfUkSges6QJPPBI82xJRaDUtNjxe0w/TTHLspoNi1VbfetbW+hxll0+1Cte7NmnXgZZxca8MAgIv4ziA0C90iIy4npDkoYoPiies0VDIBSiLarg5AvrXqj+6QWCGYlu6DJk55OZpl4AHTGeyCGm9Ip5coIRyNB45hH9EsXLiciU0HI/PS+NkA8ZsbVPgQ552cpkwYhVZ6aDs0KklaMZ/4q5JHME9q0PwHVduShZcgRP6cBOg0mskdtHmy5NqqoP0gb/09s0MJVoS4pv3Oxs8RU3q6fFtwz+wRgPU44bSstidN6GU2EEUSZ/Zi/CMTgm5wAKmQNshPuoFnRG0FwaLQAPYPaPQdRBmQ/X4HrnjWbSG9YnpqV5NJriyKcTJ2zIeNoUcEWYmk1/5KkGrBl+r+5feSIIQlFnIVNRKQuV+TZcyh/gz21LWFwwQ5xjpquCi9D1fyw/m4ca9GLd6JsgKXcnMzk+94Z+AkhuBNPcTtP5+Ka/u+J+clvbK/BAYS1Ma/6ZIZiXEKlrxT9CqyUcwagz3LhiLfUM1r25c3XuZmh79+I4KZLzJmSn0CXh+3CEowY7a6PHIBoZkkMMH60MQGOrEBHtFrQ+AqejWr9QBk7pgGslh5h8sSfPHZIwFDHIZ+BW0leOsvSBeIxRki2qW12AVfGnUfUbo4L31tFVMbSaZ/UqlHj3Ns8eYVm2grhRWHJkxbq77P/LOljaCTBkrmcGTWJQC8umhQnm6HSuZLokMrk+8zgrqajnfZO/M8WruD9/6xaUXwb3tB/R1DFKU6ieiwwCoYY1RIUl+dT9BhecK/66eEjNyUrY8nFS/S0561y8t/",
+  "Expiration" : "2025-08-07T12:19:33Z"
+}[ec2-user@ip-172-31-46-189 ~]$
