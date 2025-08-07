@@ -1,83 +1,27 @@
-Perfect! Here's a systematic set of commands to run from your EC2 instance. Please run them in order and give me all the outputs.
-🔍 Diagnostic Commands - Run These in Order:
-Step 1: Basic Instance Information
-bashecho "=== STEP 1: Instance Metadata ==="
-curl -s http://169.254.169.254/latest/meta-data/instance-id
-echo
-Step 2: IMDSv2 Token and IAM Info
-bashecho "=== STEP 2: IAM Role Check ==="
 TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
-echo "Token received (first 20 chars): ${TOKEN:0:20}..."
+echo "=== AWS EC2 IMDSv2 Diagnostic ==="
+echo "Token: ${TOKEN:0:20}..."
 echo
-
+echo "Instance ID:"
+curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/instance-id
+echo
 echo "IAM Info:"
 curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/info
 echo
-Step 3: Available Role Names
-bashecho "=== STEP 3: Available Roles ==="
-curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/
-echo
-Step 4: Role Credentials
-bashecho "=== STEP 4: Role Credentials ==="
+echo "Available Roles:"
 ROLE_NAME=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/)
-echo "Role name found: $ROLE_NAME"
+echo "Role: $ROLE_NAME"
 echo
-
 if [ -n "$ROLE_NAME" ]; then
+    echo "Credentials:"
     curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/$ROLE_NAME
     echo
-else
-    echo "No role name found!"
 fi
-Step 5: AWS CLI Configuration
-bashecho "=== STEP 5: AWS CLI Check ==="
-echo "AWS CLI Version:"
-aws --version
-echo
-
-echo "AWS Configuration:"
-aws configure list
-echo
-
-echo "Current AWS Identity:"
+echo "AWS CLI Identity:"
 aws sts get-caller-identity
 echo
-Step 6: Network Connectivity Tests
-bashecho "=== STEP 6: Network Connectivity ==="
-echo "Test HTTPS to S3:"
-curl -I -s --connect-timeout 10 https://s3.amazonaws.com
-echo
-
-echo "Test HTTPS to S3 us-east-1:"
-curl -I -s --connect-timeout 10 https://s3.us-east-1.amazonaws.com
-echo
-
-echo "Test DNS resolution:"
-nslookup s3.amazonaws.com
-echo
-Step 7: S3 Access Tests
-bashecho "=== STEP 7: S3 Access Tests ==="
-echo "Basic S3 list:"
+echo "S3 Test:"
 aws s3 ls
 echo
-
-echo "S3 with explicit region:"
-aws s3 ls --region us-east-1
-echo
-
-echo "S3 with explicit endpoint:"
-aws s3 ls --endpoint-url https://s3.us-east-1.amazonaws.com
-echo
-Step 8: Detailed Error Information
-bashecho "=== STEP 8: Detailed Error Analysis ==="
-echo "S3 with debug (first 10 lines):"
-aws s3 ls --debug 2>&1 | head -10
-echo
-
-echo "Environment variables check:"
-env | grep -i aws || echo "No AWS environment variables found"
-echo
-
-echo "Home directory check:"
-ls -la ~/ | grep aws || echo "No .aws directory found"
-echo
+echo "Network Test:"
+curl -I -s https://s3.us-east-1.amazonaws.com
