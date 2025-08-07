@@ -228,297 +228,127 @@ Think of 169.254.169.254 like a local help desk inside your EC2 instance. It’s
 - EC2/IAM commands failing when permissions deny
 - Temporary credentials showing expiration times
 
-C:\Users\E114963\Downloads>ssh -i myfirstkey.pem ec2-user@34.207.250.126
-The authenticity of host '34.207.250.126 (34.207.250.126)' can't be established.
-ED25519 key fingerprint is SHA256:G6Uk2IHWbbODVhA7SBgBpzJJaj+WuZvTZizFl6gvfZg.
-This key is not known by any other names
-Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
-Warning: Permanently added '34.207.250.126' (ED25519) to the list of known hosts.
-   ,     #_
-   ~\_  ####_        Amazon Linux 2023
-  ~~  \_#####\
-  ~~     \###|
-  ~~       \#/ ___   https://aws.amazon.com/linux/amazon-linux-2023
-   ~~       V~' '->
-    ~~~         /
-      ~~._.   _/
-         _/ _/
-       _/m/'
-[ec2-user@ip-172-31-46-189 ~]$ aws s3 ls
-2025-07-29 09:59:26 config-bucket-733366527973
-2025-07-27 08:40:38 elasticbeanstalk-ap-south-1-733366527973
-2025-08-01 08:34:09 my-test-bucket3231342
-[ec2-user@ip-172-31-46-189 ~]$ curl http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroletestingec2s3
-[ec2-user@ip-172-31-46-189 ~]$ curl http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroletestingec2s3
-[ec2-user@ip-172-31-46-189 ~]$ exit
-logout
-Connection to 34.207.250.126 closed.
+Perfect! I can see exactly what's happening. Your setup is working correctly, but there are two issues:
 
-C:\Users\E114963\Downloads>INSTANCE_ID=i-06e179fe55853e04d
-'INSTANCE_ID' is not recognized as an internal or external command,
-operable program or batch file.
+## **🎯 Great News: Your Setup is Working!**
 
-C:\Users\E114963\Downloads>aws ec2 describe-instances
-{
-    "Reservations": [
-        {
-            "ReservationId": "r-08cd27316695ffbb9",
-            "OwnerId": "733366527973",
-            "Groups": [],
-            "Instances": [
-                {
-                    "Architecture": "x86_64",
-                    "BlockDeviceMappings": [
-                        {
-                            "DeviceName": "/dev/xvda",
-                            "Ebs": {
-                                "AttachTime": "2025-08-07T05:44:33+00:00",
-                                "DeleteOnTermination": true,
-                                "Status": "attached",
-                                "VolumeId": "vol-0d788830764b98935"
-                            }
-                        }
-                    ],
-                    "ClientToken": "7f5a1d65-b08e-4ace-8d8c-be2d7be443d3",
-                    "EbsOptimized": true,
-                    "EnaSupport": true,
-                    "Hypervisor": "xen",
-                    "IamInstanceProfile": {
-                        "Arn": "arn:aws:iam::733366527973:instance-profile/iamroletestingec2s3",
-                        "Id": "AIPA2VQANE7S342GWJYE2"
-                    },
-                    "NetworkInterfaces": [
-                        {
-                            "Association": {
-                                "IpOwnerId": "amazon",
-                                "PublicDnsName": "ec2-34-207-250-126.compute-1.amazonaws.com",
-                                "PublicIp": "34.207.250.126"
-                            },
-                            "Attachment": {
-                                "AttachTime": "2025-08-07T05:44:32+00:00",
-                                "AttachmentId": "eni-attach-0a0a2331cca53a25f",
-                                "DeleteOnTermination": true,
-                                "DeviceIndex": 0,
-                                "Status": "attached",
-                                "NetworkCardIndex": 0
-                            },
-                            "Description": "",
-                            "Groups": [
-                                {
-                                    "GroupId": "sg-0692fecf78b584368",
-                                    "GroupName": "launch-wizard-3"
-                                }
-                            ],
-                            "Ipv6Addresses": [],
-                            "MacAddress": "0e:5d:7b:5b:ca:35",
-                            "NetworkInterfaceId": "eni-0a5542c24fc07ddfe",
-                            "OwnerId": "733366527973",
-                            "PrivateDnsName": "ip-172-31-46-189.ec2.internal",
-                            "PrivateIpAddress": "172.31.46.189",                            "PrivateIpAddresses": [
-                                {
-                                    "Association": {
-                                        "IpOwnerId": "amazon",
-                                        "PublicDnsName": "ec2-34-207-250-126.compute-1.amazonaws.com",
-                                        "PublicIp": "34.207.250.126"
-                                    },
-                                    "Primary": true,
-                                    "PrivateDnsName": "ip-172-31-46-189.ec2.internal",
-                                    "PrivateIpAddress": "172.31.46.189"
-                                }
-                            ],
-                            "SourceDestCheck": true,
-                            "Status": "in-use",
-                            "SubnetId": "subnet-0664e729bfdbfd543",
-                            "VpcId": "vpc-0e58e3030aefcad46",
-                            "InterfaceType": "interface",
-                            "Operator": {
-                                "Managed": false
-                            }
-                        }
-                    ],
-                    "RootDeviceName": "/dev/xvda",
-                    "RootDeviceType": "ebs",
-                    "SecurityGroups": [
-                        {
-                            "GroupId": "sg-0692fecf78b584368",
-                            "GroupName": "launch-wizard-3"
-                        }
-                    ],
-                    "SourceDestCheck": true,
-                    "Tags": [
-                        {
-                            "Key": "Name",
-                            "Value": "test-server-ec2-s3"
-                        }
-                    ],
-                    "VirtualizationType": "hvm",
-                    "CpuOptions": {
-                        "CoreCount": 1,
-                        "ThreadsPerCore": 2
-                    },
-                    "CapacityReservationSpecification": {
-                        "CapacityReservationPreference": "open"
-                    },
-                    "HibernationOptions": {
-                        "Configured": false
-                    },
-                    "MetadataOptions": {
-                        "State": "applied",
-                        "HttpTokens": "required",
-                        "HttpPutResponseHopLimit": 2,
-                        "HttpEndpoint": "enabled",
-                        "HttpProtocolIpv6": "disabled",
-                        "InstanceMetadataTags": "disabled"
-                    },
-                    "EnclaveOptions": {
-                        "Enabled": false
-                    },
-                    "BootMode": "uefi-preferred",
-                    "PlatformDetails": "Linux/UNIX",
-                    "UsageOperation": "RunInstances",
-                    "UsageOperationUpdateTime": "2025-08-07T05:44:32+00:00",
-                    "PrivateDnsNameOptions": {
-                        "HostnameType": "ip-name",
-                        "EnableResourceNameDnsARecord": true,
-                        "EnableResourceNameDnsAAAARecord": false                    },
-                    "MaintenanceOptions": {
-                        "AutoRecovery": "default",
-                        "RebootMigration": "default"
-                    },
-                    "CurrentInstanceBootMode": "uefi",
-                    "NetworkPerformanceOptions": {
-                        "BandwidthWeighting": "default"
-                    },
-                    "Operator": {
-                        "Managed": false
-                    },
-                    "InstanceId": "i-06e179fe55853e04d",
-                    "ImageId": "ami-084a7d336e816906b",
-                    "State": {
-                        "Code": 16,
-                        "Name": "running"
-                    },
-                    "PrivateDnsName": "ip-172-31-46-189.ec2.internal",
-                    "PublicDnsName": "ec2-34-207-250-126.compute-1.amazonaws.com",
-                    "StateTransitionReason": "",
-                    "KeyName": "myfirstkey",
-                    "AmiLaunchIndex": 0,
-                    "ProductCodes": [],
-                    "InstanceType": "t3.micro",
-                    "LaunchTime": "2025-08-07T05:44:32+00:00",
-                    "Placement": {
-                        "GroupName": "",
-                        "Tenancy": "default",
-                        "AvailabilityZone": "us-east-1d"
-                    },
-                    "Monitoring": {
-                        "State": "disabled"
-                    },
-                    "SubnetId": "subnet-0664e729bfdbfd543",
-                    "VpcId": "vpc-0e58e3030aefcad46",
-                    "PrivateIpAddress": "172.31.46.189",
-                    "PublicIpAddress": "34.207.250.126"
-                }
-            ]
-        },
-        {
-            "ReservationId": "r-07a1a9d3505dd32e8",
-            "OwnerId": "733366527973",
-            "Groups": [],
-            "Instances": [
-                {
-                    "Architecture": "x86_64",
-                    "BlockDeviceMappings": [],
-                    "ClientToken": "dadc97c4-880f-41a1-be16-012e45ad3b9f",
-                    "EbsOptimized": true,
-                    "EnaSupport": true,
-                    "Hypervisor": "xen",
-                    "NetworkInterfaces": [],
-                    "RootDeviceName": "/dev/xvda",
-                    "RootDeviceType": "ebs",
-                    "SecurityGroups": [],
-                    "StateReason": {
-                        "Code": "Client.UserInitiatedShutdown",
-                        "Message": "Client.UserInitiatedShutdown: User initiated shutdown"
-                    },
-                    "Tags": [
-                        {
-                            "Key": "Name",
-                            "Value": "test-server-ec2-s3"
-                        }
-                    ],
-                    "VirtualizationType": "hvm",
-                    "CpuOptions": {
-                        "CoreCount": 1,
-                        "ThreadsPerCore": 2
-                    },
-                    "CapacityReservationSpecification": {
-                        "CapacityReservationPreference": "open"
-                    },
-                    "HibernationOptions": {
-                        "Configured": false
-                    },
-                    "MetadataOptions": {
-                        "State": "pending",
-                        "HttpTokens": "required",
-                        "HttpPutResponseHopLimit": 2,
-                        "HttpEndpoint": "enabled",
-                        "HttpProtocolIpv6": "disabled",
-                        "InstanceMetadataTags": "disabled"
-                    },
-                    "EnclaveOptions": {
-                        "Enabled": false
-                    },
-                    "BootMode": "uefi-preferred",
-                    "PlatformDetails": "Linux/UNIX",
-                    "UsageOperation": "RunInstances",
-                    "UsageOperationUpdateTime": "2025-08-07T05:12:03+00:00",
-                    "MaintenanceOptions": {
-                        "AutoRecovery": "default",
-                        "RebootMigration": "default"
-                    },
-                    "CurrentInstanceBootMode": "uefi",
-                    "NetworkPerformanceOptions": {
-                        "BandwidthWeighting": "default"
-                    },
-                    "Operator": {
-                        "Managed": false
-                    },
-                    "InstanceId": "i-0a3f7cb85bd553846",
-                    "ImageId": "ami-084a7d336e816906b",
-                    "State": {
-                        "Code": 48,
-                        "Name": "terminated"
-                    },
-                    "PrivateDnsName": "",
-                    "PublicDnsName": "",
-                    "StateTransitionReason": "User initiated (2025-08-07 05:42:55 GMT)",
-                    "KeyName": "myfirstkey",
-                    "AmiLaunchIndex": 0,
-                    "ProductCodes": [],
-                    "InstanceType": "t3.micro",
-                    "LaunchTime": "2025-08-07T05:12:03+00:00",
-                    "Placement": {
-                        "GroupName": "",
-                        "Tenancy": "default",
-                        "AvailabilityZone": "us-east-1d"
-                    },
-                    "Monitoring": {
-                        "State": "disabled"
-                    }
-                }
-            ]
-        }
-    ]
-}
+Looking at your output, I can see:
 
+1. **✅ IAM Role is attached:** `"IamInstanceProfile": { "Arn": "arn:aws:iam::733366527973:instance-profile/iamroletestingec2s3"`
+2. **✅ S3 access works:** `aws s3 ls` successfully listed your buckets
+3. **✅ No hardcoded credentials:** The role is providing access automatically
 
-C:\Users\E114963\Downloads>aws ec2 describe-instances --instance-ids $i-06e179fe55853e04d --query 'Reservations[0].Instances[0].IamInstanceProfile'
+## **🔍 Two Issues to Fix:**
 
-An error occurred (InvalidInstanceID.Malformed) when calling the DescribeInstances operation: Invalid id: "$i-06e179fe55853e04d"
+### **Issue 1: IMDSv2 is Required**
 
-C:\Users\E114963\Downloads>aws ec2 describe-instances --instance-ids i-06e179fe55853e04d --query 'Reservations[0].Instances[0].IamInstanceProfile'
-"Reservations[0].Instances[0].IamInstanceProfile"
+In your instance metadata, I see:
+```json
+"HttpTokens": "required"
+```
 
+This means your instance requires **IMDSv2** (Instance Metadata Service version 2), which needs a token for security.
 
-C:\Users\E114963\Downloads>
+### **Issue 2: Wrong Role Name in URL**
+
+Your instance profile is named `iamroletestingec2s3`, but you need to check what the actual **role name** is inside that profile.
+
+## **🛠️ Solutions:**
+
+### **Step 1: Use IMDSv2 to Access Metadata**
+
+SSH back into your EC2 instance and run:
+
+```bash
+# Get a token first (required for IMDSv2)
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
+
+# Check if we got a token
+echo "Token received: $TOKEN"
+
+# Use token to get available credential names
+curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/
+```
+
+This should return the actual role name.
+
+### **Step 2: Get the Credentials**
+
+Once you get the role name from Step 1, use it:
+
+```bash
+# Use the actual role name returned from previous command
+curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/[ACTUAL-ROLE-NAME]
+```
+
+### **Step 3: Check Instance Profile Contents (From Local Machine)**
+
+From your Windows machine, check what role is actually in the instance profile:
+
+```powershell
+aws iam get-instance-profile --instance-profile-name iamroletestingec2s3
+```
+
+This will show you the exact role name inside the instance profile.
+
+## **🎯 For Your Demo - Working Commands:**
+
+Here's what you should use in your presentation:
+
+```bash
+# SSH into EC2 instance
+ssh -i myfirstkey.pem ec2-user@34.207.250.126
+
+# Show S3 access works (this proves the role is working)
+aws s3 ls
+
+# Show no hardcoded credentials
+ls -la ~/.aws/
+env | grep -i aws
+
+# Get metadata token (required for this instance)
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
+
+# Show available credentials
+curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/
+
+# Get actual credentials (use role name from above)
+curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/[ROLE-NAME]
+
+# Test permission boundaries
+aws ec2 describe-instances  # Should fail
+aws iam list-users          # Should fail
+```
+
+## **💡 Key Demo Points:**
+
+### **What's Working Perfectly:**
+1. **✅ Role attachment:** Instance profile is properly attached
+2. **✅ S3 access:** `aws s3 ls` works without any credential files
+3. **✅ Security:** No hardcoded credentials anywhere
+4. **✅ IMDSv2:** Your instance is using the more secure metadata service
+
+### **For Your Presentation:**
+> *"Notice that S3 access works perfectly even though we have no credential files. The IAM role provides temporary, auto-rotating credentials that are managed entirely by AWS. This instance is also using IMDSv2, which is the more secure version of the metadata service that requires token-based authentication."*
+
+## **🚀 Demo Script:**
+
+```bash
+# 1. Show S3 works
+aws s3 ls
+echo "✅ S3 access working with IAM role"
+
+# 2. Show no credentials stored
+ls -la ~/.aws/ 2>/dev/null || echo "✅ No credential files found"
+env | grep -i aws || echo "✅ No AWS environment variables"
+
+# 3. Show temporary credentials (with IMDSv2)
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
+echo "Role name available:"
+curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/
+
+# 4. Show permission boundaries work
+aws ec2 describe-instances && echo "❌ This should have failed!" || echo "✅ EC2 access properly denied"
+```
+
+Your setup is actually working perfectly - you just need to use IMDSv2 to access the metadata!
