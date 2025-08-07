@@ -1,27 +1,107 @@
-TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
-echo "=== AWS EC2 IMDSv2 Diagnostic ==="
-echo "Token: ${TOKEN:0:20}..."
-echo
-echo "Instance ID:"
-curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/instance-id
-echo
-echo "IAM Info:"
-curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/info
-echo
-echo "Available Roles:"
-ROLE_NAME=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/)
-echo "Role: $ROLE_NAME"
-echo
-if [ -n "$ROLE_NAME" ]; then
-    echo "Credentials:"
-    curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/$ROLE_NAME
-    echo
-fi
-echo "AWS CLI Identity:"
-aws sts get-caller-identity
-echo
-echo "S3 Test:"
-aws s3 ls
-echo
-echo "Network Test:"
-curl -I -s https://s3.us-east-1.amazonaws.com
+C:\Users\E114963\Downloads>echo "=== STEP 1: Instance Metadata ==="
+"=== STEP 1: Instance Metadata ==="
+
+C:\Users\E114963\Downloads>curl -s http://169.254.169.254/latest/meta-data/instance-id
+
+C:\Users\E114963\Downloads>echo
+ECHO is on.
+
+C:\Users\E114963\Downloads>curl -s http://169.254.169.254/latest/meta-data/instance-id
+
+C:\Users\E114963\Downloads>TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
+'TOKEN' is not recognized as an internal or external command,
+operable program or batch file.
+
+C:\Users\E114963\Downloads>echo "=== AWS EC2 IMDSv2 Diagnostic ==="
+"=== AWS EC2 IMDSv2 Diagnostic ==="
+
+C:\Users\E114963\Downloads>echo "Token: ${TOKEN:0:20}..."
+"Token: ${TOKEN:0:20}..."
+
+C:\Users\E114963\Downloads>echo
+ECHO is on.
+
+C:\Users\E114963\Downloads>echo "Instance ID:"
+"Instance ID:"
+
+C:\Users\E114963\Downloads>curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/instance-id
+
+C:\Users\E114963\Downloads>echo
+ECHO is on.
+
+C:\Users\E114963\Downloads>echo "IAM Info:"
+"IAM Info:"
+
+C:\Users\E114963\Downloads>curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/info
+
+C:\Users\E114963\Downloads>echo
+ECHO is on.
+
+C:\Users\E114963\Downloads>echo "Available Roles:"
+"Available Roles:"
+
+C:\Users\E114963\Downloads>ROLE_NAME=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/)
+'ROLE_NAME' is not recognized as an internal or external command,
+operable program or batch file.
+
+C:\Users\E114963\Downloads>echo "Role: $ROLE_NAME"
+"Role: $ROLE_NAME"
+
+C:\Users\E114963\Downloads>echo
+ECHO is on.
+
+C:\Users\E114963\Downloads>if [ -n "$ROLE_NAME" ]; then
+-n was unexpected at this time.
+
+C:\Users\E114963\Downloads>    echo "Credentials:"
+"Credentials:"
+
+C:\Users\E114963\Downloads>    curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/$ROLE_NAME
+
+C:\Users\E114963\Downloads>    echo
+ECHO is on.
+
+C:\Users\E114963\Downloads>fi
+'fi' is not recognized as an internal or external command,
+operable program or batch file.
+
+C:\Users\E114963\Downloads>echo "AWS CLI Identity:"
+"AWS CLI Identity:"
+
+C:\Users\E114963\Downloads>aws sts get-caller-identity
+{
+    "UserId": "AIDA2VQANE7SSQXAI2DKA",
+    "Account": "733366527973",
+    "Arn": "arn:aws:iam::733366527973:user/harmeek-admin"
+}
+
+
+C:\Users\E114963\Downloads>echo
+ECHO is on.
+
+C:\Users\E114963\Downloads>echo "S3 Test:"
+"S3 Test:"
+
+C:\Users\E114963\Downloads>aws s3 ls
+2025-07-29 15:29:26 config-bucket-733366527973
+2025-07-27 14:10:38 elasticbeanstalk-ap-south-1-733366527973
+2025-08-01 14:04:09 my-test-bucket3231342
+
+C:\Users\E114963\Downloads>echo
+ECHO is on.
+
+C:\Users\E114963\Downloads>echo "Network Test:"
+"Network Test:"
+
+C:\Users\E114963\Downloads>curl -I -s https://s3.us-east-1.amazonaws.com
+HTTP/1.1 405 Method Not Allowed
+x-amz-request-id: 6PG7B8VZKTQQGP4W
+x-amz-id-2: V1Hm9JhJMksWfudUJ8SNR/Nxz0a7y/BSYj7TfE0FaIeFq4c2Vpmi2IM2SZmdv3Rt8/JqKiJPTKSrF68W58wvoiOKzq1KTejG
+Allow: GET
+Content-Type: application/xml
+Transfer-Encoding: chunked
+Date: Thu, 07 Aug 2025 10:51:15 GMT
+Server: AmazonS3
+
+
+C:\Users\E114963\Downloads>
