@@ -1,321 +1,215 @@
-# AWS Security Architecture - CLI Commands Reference
+# AWS Security Architecture Demos - CLI Commands Used
 
-## 📋 Complete Command Reference for All Demos
+## 📋 Commands Used in Live Demonstrations
 
-This document provides a comprehensive reference of all AWS CLI commands used across the 7 security architecture demos, organized by service and use case.
-
----
-
-## 🔧 AWS CLI Configuration Commands
-
-### Initial Setup and Configuration
-
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws --version` | **Environment Check** | Verify AWS CLI is installed and check version |
-| `aws configure` | **Initial Setup** | Configure AWS CLI with access keys, region, and output format |
-| `aws configure --profile test-user` | **Multiple Profiles** | Configure additional profiles for different users or environments |
-| `aws configure list` | **Configuration Verification** | Display current AWS CLI configuration settings |
-| `aws sts get-caller-identity` | **Identity Verification** | Show currently authenticated user/role and account ID |
-
-### Profile Management
-
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws s3 ls --profile test-user` | **Profile Usage** | Execute commands using specific profile credentials |
-| `aws configure --profile neil2` | **User-Specific Config** | Set up configuration for different IAM users |
+This document contains **only** the CLI commands actually used in the 7 AWS Security Architecture demos, organized by demonstration sequence.
 
 ---
 
-## 👥 IAM (Identity and Access Management) Commands
+## 🔧 Demo 1: Account Security Foundation
 
-### User Management
+### Commands Used:
 
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws iam create-user --user-name admin-user` | **Admin User Creation** | Create new IAM user for administrative tasks |
-| `aws iam create-user --user-name test-user` | **Test User Creation** | Create user for permission testing and validation |
-| `aws iam delete-user --user-name test-user` | **User Cleanup** | Remove IAM user (must remove all attached policies first) |
-| `aws iam list-users` | **User Inventory** | List all IAM users in the account |
+| Command | Purpose | Demo Context |
+|---------|---------|--------------|
+| `aws configure` | Configure AWS CLI with admin user credentials | Set up CLI access with admin user (not root) |
+| `aws sts get-caller-identity` | Verify current user identity | Confirm we're using admin user, not root account |
+| `aws configure list` | Display current configuration | Show CLI is properly configured with correct user |
 
-### Login Profile Management
-
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws iam create-login-profile --user-name admin-user --password AdminPass123! --no-password-reset-required` | **Console Access Setup** | Enable AWS Console login for user with specified password |
-| `aws iam delete-login-profile --user-name test-user` | **Console Access Removal** | Remove console login capability from user |
-
-### Access Key Management
-
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws iam create-access-key --user-name admin-user` | **Programmatic Access** | Generate access key and secret for CLI/API access |
-| `aws iam list-access-keys --user-name test-user` | **Key Inventory** | List all access keys for a specific user |
-| `aws iam delete-access-key --user-name test-user --access-key-id AKIAXXXXX` | **Key Cleanup** | Remove specific access key from user |
-
-### Group Management
-
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws iam create-group --group-name iamreadonly` | **Permission Grouping** | Create group for organizing users with similar permissions |
-| `aws iam add-user-to-group --group-name iamreadonly --user-name test-user` | **Group Membership** | Add user to group to inherit group permissions |
-| `aws iam remove-user-from-group --group-name iamreadonly --user-name test-user` | **Group Removal** | Remove user from group |
-| `aws iam delete-group --group-name iamreadonly` | **Group Cleanup** | Delete group (must remove all users and policies first) |
-
-### Policy Management
-
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws iam attach-user-policy --user-name admin-user --policy-arn arn:aws:iam::aws:policy/AdministratorAccess` | **AWS Managed Policy** | Attach AWS-provided policy directly to user |
-| `aws iam attach-group-policy --group-name iamreadonly --policy-arn arn:aws:iam::aws:policy/IAMReadOnlyAccess` | **Group Policy Attachment** | Attach AWS managed policy to group |
-| `aws iam create-policy --policy-name iampolicytests3full --policy-document file://s3-read-policy.json` | **Custom Policy Creation** | Create custom policy from JSON document |
-| `aws iam attach-user-policy --user-name test-user --policy-arn arn:aws:iam::ACCOUNT-ID:policy/iampolicytests3full` | **Custom Policy Attachment** | Attach custom policy to user |
-| `aws iam detach-user-policy --user-name test-user --policy-arn arn:aws:iam::ACCOUNT-ID:policy/iampolicytests3full` | **Policy Detachment** | Remove policy from user |
-| `aws iam delete-policy --policy-arn arn:aws:iam::ACCOUNT-ID:policy/iampolicytests3full` | **Policy Cleanup** | Delete custom policy |
-
-### Role Management
-
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws iam create-role --role-name iamroletests3 --assume-role-policy-document file://user-trust-policy.json` | **User Role Creation** | Create role that users can assume temporarily |
-| `aws iam create-role --role-name iamroleec2s3 --assume-role-policy-document file://ec2-trust-policy.json` | **Service Role Creation** | Create role for AWS services (like EC2) to assume |
-| `aws iam attach-role-policy --role-name iamroleec2s3 --policy-arn arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess` | **Role Permission** | Grant permissions to role |
-| `aws iam get-role --role-name iamroleec2s3` | **Role Information** | View role details and trust policy |
-| `aws iam list-attached-role-policies --role-name iamroleec2s3` | **Role Policy Audit** | List all policies attached to role |
-| `aws iam delete-role --role-name iamroleec2s3` | **Role Cleanup** | Delete role (must detach policies first) |
-
-### Instance Profile Management
-
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws iam create-instance-profile --instance-profile-name ec2-s3-profile` | **EC2 Role Container** | Create container for EC2 role attachment |
-| `aws iam add-role-to-instance-profile --instance-profile-name ec2-s3-profile --role-name iamroleec2s3` | **Role Assignment** | Add role to instance profile for EC2 use |
-| `aws iam remove-role-from-instance-profile --instance-profile-name ec2-s3-profile --role-name iamroleec2s3` | **Role Removal** | Remove role from instance profile |
-| `aws iam delete-instance-profile --instance-profile-name ec2-s3-profile` | **Profile Cleanup** | Delete instance profile |
-
-### Role Assumption
-
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws sts assume-role --role-arn arn:aws:iam::ACCOUNT-ID:role/iamroletests3 --role-session-name test-session --profile neil2` | **Temporary Access** | Assume role to get temporary credentials with role permissions |
+### Expected Outputs:
+- **`aws sts get-caller-identity`** should show admin user ARN, not root
+- **`aws configure list`** should show admin user access key and us-east-1 region
 
 ---
 
-## 🌐 VPC (Virtual Private Cloud) Commands
+## 👥 Demo 2: IAM Permission Control
 
-### VPC Management
+### Commands Used:
 
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws ec2 create-vpc --cidr-block 10.0.0.0/16` | **Custom Network** | Create isolated virtual network with specified IP range |
-| `aws ec2 describe-vpcs --vpc-ids vpc-xxxxxxxx` | **VPC Information** | Get details about specific VPC |
-| `aws ec2 modify-vpc-attribute --vpc-id vpc-xxxxxxxx --enable-dns-hostnames` | **DNS Configuration** | Enable hostname resolution within VPC |
-| `aws ec2 delete-vpc --vpc-id vpc-xxxxxxxx` | **VPC Cleanup** | Delete VPC (must remove all resources first) |
+| Command | Purpose | Demo Context |
+|---------|---------|--------------|
+| `aws configure --profile test-user` | Configure CLI profile for test user | Set up test user credentials for permission testing |
+| `aws s3 ls --profile test-user` | Test S3 access with test user | Initially fails (no permissions), later succeeds after policy attachment |
+| `aws iam list-users --profile test-user` | Test IAM access with test user | Succeeds after adding to iamreadonly group |
+| `aws ec2 describe-instances --profile test-user` | Test EC2 access with test user | Always fails (proves least privilege working) |
 
-### Subnet Management
-
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws ec2 create-subnet --vpc-id vpc-xxxxxxxx --cidr-block 10.0.1.0/24 --availability-zone us-east-1a` | **Network Segmentation** | Create subnet within VPC for resource placement |
-| `aws ec2 describe-subnets --filters "Name=vpc-id,Values=vpc-xxxxxxxx"` | **Subnet Inventory** | List all subnets in specific VPC |
-| `aws ec2 modify-subnet-attribute --subnet-id subnet-xxxxxxxx --map-public-ip-on-launch` | **Public IP Assignment** | Enable automatic public IP for instances in subnet |
-| `aws ec2 delete-subnet --subnet-id subnet-xxxxxxxx` | **Subnet Cleanup** | Delete subnet |
-
-### Internet Gateway Management
-
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws ec2 create-internet-gateway` | **Internet Access** | Create gateway for internet connectivity |
-| `aws ec2 attach-internet-gateway --internet-gateway-id igw-xxxxxxxx --vpc-id vpc-xxxxxxxx` | **Gateway Attachment** | Connect internet gateway to VPC |
-| `aws ec2 describe-internet-gateways --internet-gateway-ids igw-xxxxxxxx` | **Gateway Information** | Get internet gateway details |
-| `aws ec2 detach-internet-gateway --internet-gateway-id igw-xxxxxxxx --vpc-id vpc-xxxxxxxx` | **Gateway Detachment** | Disconnect gateway from VPC |
-| `aws ec2 delete-internet-gateway --internet-gateway-id igw-xxxxxxxx` | **Gateway Cleanup** | Delete internet gateway |
-
-### Route Table Management
-
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws ec2 create-route-table --vpc-id vpc-xxxxxxxx` | **Traffic Routing** | Create custom routing table for subnet |
-| `aws ec2 create-route --route-table-id rtb-xxxxxxxx --destination-cidr-block 0.0.0.0/0 --gateway-id igw-xxxxxxxx` | **Internet Route** | Add route to internet gateway for all traffic |
-| `aws ec2 associate-route-table --subnet-id subnet-xxxxxxxx --route-table-id rtb-xxxxxxxx` | **Route Association** | Connect subnet to specific route table |
-| `aws ec2 describe-route-tables --filters "Name=vpc-id,Values=vpc-xxxxxxxx"` | **Route Inventory** | List all route tables in VPC |
-| `aws ec2 delete-route-table --route-table-id rtb-xxxxxxxx` | **Route Cleanup** | Delete custom route table |
+### Permission Testing Flow:
+1. **No permissions:** `aws s3 ls --profile test-user` → Access Denied ❌
+2. **After IAM group:** `aws iam list-users --profile test-user` → Success ✅
+3. **After S3 policy:** `aws s3 ls --profile test-user` → Success ✅
+4. **EC2 still blocked:** `aws ec2 describe-instances --profile test-user` → Access Denied ❌
 
 ---
 
-## 🔒 Security Group Commands
+## 🎫 Demo 3: IAM Roles & Service Authentication
 
-### Security Group Management
+### Commands Used:
 
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws ec2 create-security-group --group-name demo-sg --description "Demo security group" --vpc-id vpc-xxxxxxxx` | **Firewall Creation** | Create instance-level firewall rules |
-| `aws ec2 authorize-security-group-ingress --group-id sg-xxxxxxxx --protocol tcp --port 22 --cidr 203.0.113.5/32` | **Allow Rule** | Add inbound access rule (SSH from specific IP) |
-| `aws ec2 describe-security-groups --group-ids sg-xxxxxxxx` | **Rule Inspection** | View all firewall rules for security group |
-| `aws ec2 revoke-security-group-ingress --group-id sg-xxxxxxxx --protocol tcp --port 22 --cidr 203.0.113.5/32` | **Rule Removal** | Remove specific inbound rule |
-| `aws ec2 delete-security-group --group-id sg-xxxxxxxx` | **Firewall Cleanup** | Delete security group |
+| Command | Purpose | Demo Context |
+|---------|---------|--------------|
+| `aws configure --profile neil2` | Configure CLI for role assumption testing | Set up user with no direct permissions |
+| `aws s3 ls --profile neil2` | Test S3 access without role | Shows access denied before role assumption |
+| `aws sts assume-role --role-arn arn:aws:iam::ACCOUNT-ID:role/iamroletests3 --role-session-name test-session --profile neil2` | Assume role to gain S3 access | Get temporary credentials with S3 permissions |
+| `aws s3 ls` | Test S3 access with assumed role | Works after assuming role (using temporary credentials) |
+| `aws s3 ls` | Test S3 access from EC2 instance | Demonstrates automatic role assumption by EC2 |
+| `aws ec2 describe-instances` | Test EC2 access from EC2 instance | Fails because role doesn't include EC2 permissions |
+| `curl http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroleec2s3` | Show temporary credentials | Display auto-rotating credentials from EC2 metadata |
 
----
-
-## 🛡️ Network ACL Commands
-
-### Network ACL Management
-
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws ec2 create-network-acl --vpc-id vpc-xxxxxxxx` | **Subnet Firewall** | Create subnet-level firewall (stateless) |
-| `aws ec2 create-network-acl-entry --network-acl-id acl-xxxxxxxx --rule-number 100 --protocol tcp --port-range From=22,To=22 --cidr-block 203.0.113.5/32 --rule-action allow` | **Inbound Rule** | Add inbound access rule to network ACL |
-| `aws ec2 create-network-acl-entry --network-acl-id acl-xxxxxxxx --rule-number 100 --protocol tcp --port-range From=1024,To=65535 --cidr-block 203.0.113.5/32 --rule-action allow --egress` | **Outbound Rule** | Add outbound rule for return traffic |
-| `aws ec2 describe-network-acls --network-acl-ids acl-xxxxxxxx` | **ACL Inspection** | View all rules in network ACL |
-| `aws ec2 replace-network-acl-association --association-id aclassoc-xxxxxxxx --network-acl-id acl-xxxxxxxx` | **ACL Association** | Associate network ACL with subnet |
-| `aws ec2 delete-network-acl --network-acl-id acl-xxxxxxxx` | **ACL Cleanup** | Delete network ACL |
+### Role Flow Demonstration:
+1. **Before role:** `aws s3 ls --profile neil2` → Access Denied ❌
+2. **Assume role:** Get temporary credentials from assume-role command
+3. **With role:** `aws s3 ls` → Success ✅ (using exported temporary credentials)
+4. **From EC2:** `aws s3 ls` → Success ✅ (automatic role assumption)
+5. **EC2 limits:** `aws ec2 describe-instances` → Access Denied ❌ (role boundary working)
 
 ---
 
-## 💻 EC2 (Elastic Compute Cloud) Commands
+## 🌐 Demo 4: VPC Network Architecture
 
-### Key Pair Management
+### Commands Used:
 
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws ec2 create-key-pair --key-name demo-key` | **SSH Authentication** | Create SSH key pair for secure instance access |
-| `aws ec2 describe-key-pairs --key-names demo-key` | **Key Verification** | Verify key pair exists and get details |
-| `aws ec2 delete-key-pair --key-name demo-key` | **Key Cleanup** | Delete SSH key pair |
+| Command | Purpose | Demo Context |
+|---------|---------|--------------|
+| `aws ec2 describe-vpcs --vpc-ids $VPC_ID` | Show VPC details | Display custom VPC configuration after creation |
+| `aws ec2 describe-subnets --filters "Name=vpc-id,Values=$VPC_ID"` | Show subnet details | Display public and private subnets in custom VPC |
+| `aws ec2 describe-route-tables --filters "Name=vpc-id,Values=$VPC_ID"` | Show routing configuration | Display route tables and internet gateway routes |
+| `aws ec2 describe-internet-gateways --filters "Name=attachment.vpc-id,Values=$VPC_ID"` | Show internet gateway | Verify internet gateway is attached to VPC |
 
-### AMI (Amazon Machine Image) Discovery
-
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws ec2 describe-images --owners amazon --filters "Name=name,Values=amzn2-ami-hvm-*-x86_64-gp2" "Name=state,Values=available"` | **Image Discovery** | Find latest Amazon Linux AMI for instance launch |
-| `aws ec2 describe-availability-zones` | **Zone Discovery** | List available availability zones in region |
-
-### Instance Management
-
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws ec2 run-instances --image-id ami-xxxxxxxx --instance-type t2.micro --key-name demo-key --security-group-ids sg-xxxxxxxx --subnet-id subnet-xxxxxxxx --iam-instance-profile Name=ec2-s3-profile` | **Secure Launch** | Launch EC2 instance with all security components |
-| `aws ec2 describe-instances --instance-ids i-xxxxxxxx` | **Instance Details** | Get comprehensive information about instance |
-| `aws ec2 wait instance-running --instance-ids i-xxxxxxxx` | **Status Monitoring** | Wait for instance to reach running state |
-| `aws ec2 terminate-instances --instance-ids i-xxxxxxxx` | **Instance Cleanup** | Terminate and delete instance |
+### Network Verification Flow:
+- **VPC:** Shows custom CIDR block (10.0.0.0/16)
+- **Subnets:** Shows public (10.0.1.0/24) and private (10.0.2.0/24) subnets
+- **Routes:** Shows internet gateway route for public subnet only
+- **Gateway:** Shows internet gateway attached and available
 
 ---
 
-## 🗄️ S3 (Simple Storage Service) Commands
+## 🔒 Demo 5: Network Firewall Defense
 
-### Bucket Operations
+### Commands Used:
 
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `aws s3 ls` | **Permission Testing** | List all S3 buckets (tests S3 read permissions) |
-| `aws s3api list-buckets` | **Detailed Bucket Info** | Get detailed information about all buckets |
-| `aws s3api get-bucket-location --bucket bucket-name` | **Bucket Details** | Get specific bucket location and configuration |
+| Command | Purpose | Demo Context |
+|---------|---------|--------------|
+| `curl https://checkip.amazonaws.com` | Get current public IP | Determine admin IP for security group rules |
+| `aws ec2 describe-security-groups --group-ids $SG_ID` | Show security group rules | Display SSH access restricted to admin IP only |
+| `aws ec2 describe-network-acls --network-acl-ids $CUSTOM_NACL_ID` | Show network ACL rules | Display subnet-level firewall rules |
 
----
-
-## 🔍 Utility and Information Commands
-
-### General AWS Information
-
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `curl https://checkip.amazonaws.com` | **IP Discovery** | Get your current public IP address for security group rules |
-| `curl http://169.254.169.254/latest/meta-data/iam/security-credentials/` | **Instance Metadata** | View temporary credentials from within EC2 instance |
-| `curl http://169.254.169.254/latest/meta-data/iam/security-credentials/role-name` | **Credential Details** | Get detailed temporary credential information |
-
-### Environment and Debugging
-
-| Command | Use Case | Meaning |
-|---------|----------|---------|
-| `env | grep -i aws` | **Environment Check** | Check for AWS-related environment variables |
-| `ls -la ~/.aws/` | **Credential File Check** | Verify presence of AWS credential files |
-| `echo $AWS_ACCESS_KEY_ID` | **Variable Verification** | Check if AWS credentials are set as environment variables |
+### Security Validation:
+- **IP Discovery:** Shows current public IP for firewall rules
+- **Security Group:** Shows SSH (port 22) allowed from admin IP only
+- **Network ACL:** Shows inbound SSH and outbound ephemeral port rules
 
 ---
 
-## 📊 Command Organization by Demo
+## 💻 Demo 6: Secure EC2 Launch
 
-### Demo 1 - Account Security Foundation
-- `aws configure`
-- `aws sts get-caller-identity`
-- `aws iam create-user`
-- `aws iam create-login-profile`
-- `aws iam attach-user-policy`
-- `aws iam create-access-key`
+### Commands Used:
 
-### Demo 2 - IAM Permission Control
-- `aws iam create-group`
-- `aws iam add-user-to-group`
-- `aws iam create-policy`
-- `aws iam attach-user-policy`
-- `aws s3 ls --profile`
-- `aws iam list-users --profile`
+| Command | Purpose | Demo Context |
+|---------|---------|--------------|
+| `aws ec2 describe-instances --instance-ids $INSTANCE_ID` | Show instance details | Display secure instance configuration |
+| `aws ec2 wait instance-running --instance-ids $INSTANCE_ID` | Wait for instance ready | Ensure instance is running before connection |
 
-### Demo 3 - IAM Roles & Service Authentication
-- `aws iam create-role`
-- `aws iam attach-role-policy`
-- `aws iam create-instance-profile`
-- `aws iam add-role-to-instance-profile`
-- `aws sts assume-role`
-
-### Demo 4 - VPC Network Architecture
-- `aws ec2 create-vpc`
-- `aws ec2 create-subnet`
-- `aws ec2 create-internet-gateway`
-- `aws ec2 attach-internet-gateway`
-- `aws ec2 create-route-table`
-- `aws ec2 create-route`
-- `aws ec2 associate-route-table`
-
-### Demo 5 - Network Firewall Defense
-- `aws ec2 create-security-group`
-- `aws ec2 authorize-security-group-ingress`
-- `aws ec2 create-network-acl`
-- `aws ec2 create-network-acl-entry`
-- `aws ec2 describe-security-groups`
-
-### Demo 6 - Secure EC2 Launch
-- `aws ec2 create-key-pair`
-- `aws ec2 describe-images`
-- `aws ec2 run-instances`
-- `aws ec2 wait instance-running`
-- `aws ec2 describe-instances`
-
-### Demo 7 - Complete Validation
-- `aws s3 ls` (from EC2)
-- `aws ec2 describe-instances` (should fail)
-- `aws iam list-users` (should fail)
-- `curl http://169.254.169.254/latest/meta-data/iam/security-credentials/`
+### Instance Verification:
+- **Configuration:** Shows instance in custom VPC, public subnet, with security group and IAM role
+- **Status:** Confirms instance is running and ready for SSH connection
 
 ---
 
-## 🧹 Cleanup Commands Summary
+## 🎯 Demo 7: Complete End-to-End Validation
 
-For complete resource cleanup after demos:
+### Commands Used (from within EC2 instance):
 
-| Resource Type | Cleanup Commands |
-|---------------|------------------|
-| **EC2 Instances** | `aws ec2 terminate-instances` |
-| **Key Pairs** | `aws ec2 delete-key-pair` |
-| **Security Groups** | `aws ec2 delete-security-group` |
-| **Network ACLs** | `aws ec2 delete-network-acl` |
-| **Subnets** | `aws ec2 delete-subnet` |
-| **Route Tables** | `aws ec2 delete-route-table` |
-| **Internet Gateways** | `aws ec2 detach-internet-gateway`, `aws ec2 delete-internet-gateway` |
-| **VPCs** | `aws ec2 delete-vpc` |
-| **Instance Profiles** | `aws iam remove-role-from-instance-profile`, `aws iam delete-instance-profile` |
-| **IAM Roles** | `aws iam detach-role-policy`, `aws iam delete-role` |
-| **IAM Policies** | `aws iam detach-user-policy`, `aws iam delete-policy` |
-| **IAM Users** | `aws iam delete-access-key`, `aws iam delete-login-profile`, `aws iam delete-user` |
-| **IAM Groups** | `aws iam remove-user-from-group`, `aws iam detach-group-policy`, `aws iam delete-group` |
+| Command | Purpose | Demo Context |
+|---------|---------|--------------|
+| `aws s3 ls` | Test S3 access from EC2 | Should work - role allows S3 read access |
+| `aws s3api list-buckets` | Test detailed S3 operations | Should work - demonstrates S3 permissions |
+| `aws ec2 describe-instances` | Test EC2 management from EC2 | Should fail - role doesn't include EC2 permissions |
+| `aws iam list-users` | Test IAM access from EC2 | Should fail - role doesn't include IAM permissions |
+| `curl http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroleec2s3` | Show instance credentials | Display temporary, auto-rotating credentials |
+| `curl http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroleec2s3 | grep Expiration` | Show credential expiration | Display when credentials expire (6-hour rotation) |
+| `ls -la ~/.aws/` | Check for credential files | Should show no files - proves no hardcoded credentials |
+| `env | grep -i aws` | Check environment variables | Should show no AWS variables - proves no hardcoded credentials |
+
+### Complete Validation Results:
+
+| Test Category | Command | Expected Result | Security Proof |
+|---------------|---------|----------------|-----------------|
+| **Allowed Operations** | `aws s3 ls` | ✅ Success | Role permissions working |
+| **Allowed Operations** | `aws s3api list-buckets` | ✅ Success | S3 access confirmed |
+| **Blocked Operations** | `aws ec2 describe-instances` | ❌ Access Denied | Permission boundary enforced |
+| **Blocked Operations** | `aws iam list-users` | ❌ Access Denied | Least privilege working |
+| **Credential Security** | `ls -la ~/.aws/` | No files found | No hardcoded credentials |
+| **Credential Security** | `env \| grep -i aws` | No variables | No environment credentials |
+| **Auto-Rotation** | `curl ...security-credentials...` | Shows expiration | Credentials expire automatically |
 
 ---
 
-## 📝 Notes
+## 📊 Command Summary by Category
 
-- **Replace placeholders** like `vpc-xxxxxxxx`, `sg-xxxxxxxx`, `ACCOUNT-ID` with actual values
-- **Commands are region-specific** - ensure consistent region usage throughout demos
-- **Some commands require prerequisites** - follow demo sequence for dependencies
-- **Free tier eligible** - All commands use resources within AWS free tier limits
-- **Security best practice** - Always clean up resources after demonstrations to avoid charges
+### **Identity and Verification:**
+- `aws sts get-caller-identity` - Who am I?
+- `aws configure list` - How am I configured?
+- `curl https://checkip.amazonaws.com` - What's my IP?
 
-This reference provides comprehensive coverage of all CLI commands used across the AWS Security Architecture demo series, organized for easy lookup and understanding.
+### **Permission Testing:**
+- `aws s3 ls` - Do I have S3 access?
+- `aws iam list-users` - Do I have IAM access?
+- `aws ec2 describe-instances` - Do I have EC2 access?
+- `aws s3api list-buckets` - Can I perform detailed S3 operations?
+
+### **Role Management:**
+- `aws sts assume-role` - Switch to different permissions
+- `curl http://169.254.169.254/latest/meta-data/iam/security-credentials/` - Show automatic credentials
+
+### **Infrastructure Verification:**
+- `aws ec2 describe-vpcs` - Show network architecture
+- `aws ec2 describe-subnets` - Show network segmentation
+- `aws ec2 describe-security-groups` - Show firewall rules
+- `aws ec2 describe-instances` - Show instance configuration
+
+### **Security Validation:**
+- `ls -la ~/.aws/` - Check for credential files
+- `env | grep -i aws` - Check for environment credentials
+- Profile-based commands with `--profile` - Test different user permissions
+
+---
+
+## 🎯 Key Command Patterns in Demos
+
+### **Progressive Permission Testing:**
+1. Start with no permissions → Access Denied
+2. Add group membership → Some access granted  
+3. Add custom policy → Additional access granted
+4. Test boundaries → Other services still denied
+
+### **Role-Based Authentication:**
+1. Direct user access → Fails without permissions
+2. Assume role → Temporary access granted
+3. EC2 automatic assumption → Seamless service access
+4. Permission boundaries → Only specific services allowed
+
+### **Security Verification:**
+1. Network access → SSH from authorized IP only
+2. Service permissions → Only S3 read access works
+3. Credential security → No hardcoded keys found
+4. Automatic rotation → Credentials expire and refresh
+
+---
+
+## 📝 Notes for Demo Execution
+
+### **Variable Usage:**
+- Replace `$VPC_ID`, `$SG_ID`, `$INSTANCE_ID` with actual values during demos
+- Replace `ACCOUNT-ID` with your actual AWS account ID
+- Replace `--profile` names with your configured profile names
+
+### **Expected Failures:**
+- Many commands are **supposed to fail** to demonstrate security boundaries
+- Access Denied errors are **positive results** showing security is working
+- Missing credential files are **good signs** showing no hardcoded keys
+
+### **Success Indicators:**
+- `aws sts get-caller-identity` showing admin user (not root)
+- S3 commands working when permissions allow
+- EC2/IAM commands failing when permissions deny
+- Temporary credentials showing expiration times
