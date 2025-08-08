@@ -1,266 +1,360 @@
-# AWS Security Architecture Demos - CLI Commands Used
+# AWS Security Architecture - Demo CLI Commands Reference
 
-## 📋 Commands Used in Live Demonstrations
+This repository contains all the CLI commands I actually used during my 7 AWS Security Architecture demonstrations. These are real commands that I ran and tested, organized by demo sequence for easy reference.
 
-This document contains **only** the CLI commands actually used in the 7 AWS Security Architecture demos, organized by demonstration sequence.
+## 🚀 Quick Start
+
+If you're following along with these demos, make sure you have:
+- AWS CLI installed and configured
+- Appropriate IAM permissions 
+- A basic understanding of AWS networking concepts
+
+> **Note**: All commands in this guide have been tested and work as documented. If you run into issues, check the troubleshooting section at the bottom.
 
 ---
 
-## 🔒 Instance Metadata Service (IMDS) Commands
+## 🔒 Understanding Instance Metadata Service (IMDS)
 
-### IMDSv1 vs IMDSv2 Security
+One thing I learned the hard way during these demos is that modern EC2 instances use **IMDSv2** by default for security. This means you need to authenticate with a token before accessing instance metadata.
 
-Modern EC2 instances often require **IMDSv2** (Instance Metadata Service version 2) for enhanced security. This requires token-based authentication instead of simple GET requests.
+### Why This Matters
 
-| Command Type | IMDSv1 (Legacy) | IMDSv2 (Secure - Required) |
-|--------------|-----------------|----------------------------|
-| **Token Generation** | Not required | `TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)` |
-| **Role Name Retrieval** | `curl http://169.254.169.254/latest/meta-data/iam/security-credentials/` | `curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/` |
-| **Credential Retrieval** | `curl http://169.254.169.254/latest/meta-data/iam/security-credentials/[ROLE-NAME]` | `curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/[ROLE-NAME]` |
+Modern AWS instances require token-based authentication to prevent Server-Side Request Forgery (SSRF) attacks. Here's what you need to know:
 
-### Why IMDSv2 is Required:
+| Approach | Legacy (IMDSv1) | Modern (IMDSv2) |
+|----------|-----------------|-----------------|
+| **Token Required** | No | Yes |
+| **Command Example** | `curl http://169.254.169.254/latest/meta-data/` | First get token, then use it in headers |
+| **Security Level** | Basic | Enhanced |
 
-**Security Benefits:**
-- **SSRF Attack Prevention:** Two-step process prevents Server-Side Request Forgery attacks
-- **Session Management:** Tokens expire (configurable 1 second to 6 hours)  
-- **Intent Verification:** PUT request + header proves intentional access
-- **Defense in Depth:** Additional security layer beyond IAM roles
+### How to Get Credentials from EC2 Instances
 
-**Instance Configuration:**
-- **`"HttpTokens": "required"`** - Only IMDSv2 allowed (modern default)
-- **`"HttpTokens": "optional"`** - Both IMDSv1 and IMDSv2 allowed (legacy)
-- **`"HttpTokens": "disabled"`** - No metadata access allowed
+```bash
+# Step 1: Get authentication token (lasts 6 hours)
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
 
-### Demo Context:
-> *"Modern AWS instances use IMDSv2 by default for security. The token-based authentication prevents malicious applications from accidentally accessing instance credentials through common web vulnerabilities."*
+# Step 2: Use token to access metadata
+curl -H "X-aws-ec2-metadata-token: $TOKEN" -s \
+  http://169.254.169.254/latest/meta-data/iam/security-credentials/
+
+# Step 3: Get actual credentials
+curl -H "X-aws-ec2-metadata-token: $TOKEN" -s \
+  http://169.254.169.254/latest/meta-data/iam/security-credentials/[ROLE-NAME]
+```
+
+**Why this is secure**: The two-step process ensures only legitimate applications can access credentials, and tokens expire automatically.
 
 ---
 
 ## 🔧 Demo 1: Account Security Foundation
 
-### Commands Used:
+The first demo focuses on setting up secure AWS CLI access using an admin user instead of the root account.
 
-| Command | Purpose | Demo Context |
-|---------|---------|--------------|
-| `aws configure` | Configure AWS CLI with admin user credentials | Set up CLI access with admin user (not root) |
-| `aws sts get-caller-identity` | Verify current user identity | Confirm we're using admin user, not root account |
-| `aws configure list` | Display current configuration | Show CLI is properly configured with correct user |
+### Commands I Used
 
-### Expected Outputs:
-- **`aws sts get-caller-identity`** should show admin user ARN, not root
-- **`aws configure list`** should show admin user access key and us-east-1 region
+| What I Did | Command | Why This Matters |
+|------------|---------|------------------|
+| Configure AWS CLI | `aws configure` | Sets up CLI with admin user credentials (never use root for daily tasks) |
+| Verify identity | `aws sts get-caller-identity` | Confirms I'm using admin user, not root account |
+| Check configuration | `aws configure list` | Shows CLI is properly configured with correct region |
+
+### What Success Looks Like
+
+When you run `aws sts get-caller-identity`, you should see something like:
+```json
+{
+    "UserId": "AIDAXXXXXXXXXXXXX",
+    "Account": "123456789012", 
+    "Arn": "arn:aws:iam::123456789012:user/admin-user"
+}
+```
+
+**Key point**: The ARN should show a user, not root. This proves you're following security best practices.
 
 ---
 
 ## 👥 Demo 2: IAM Permission Control
 
-### Commands Used:
+This demo shows how to implement least privilege access by progressively granting permissions to a test user.
 
-| Command | Purpose | Demo Context |
-|---------|---------|--------------|
-| `aws configure --profile test-user` | Configure CLI profile for test user | Set up test user credentials for permission testing |
-| `aws s3 ls --profile test-user` | Test S3 access with test user | Initially fails (no permissions), later succeeds after policy attachment |
-| `aws iam list-users --profile test-user` | Test IAM access with test user | Succeeds after adding to iamreadonly group |
-| `aws ec2 describe-instances --profile test-user` | Test EC2 access with test user | Always fails (proves least privilege working) |
+### The Permission Journey
 
-### Permission Testing Flow:
-1. **No permissions:** `aws s3 ls --profile test-user` → Access Denied ❌
-2. **After IAM group:** `aws iam list-users --profile test-user` → Success ✅
-3. **After S3 policy:** `aws s3 ls --profile test-user` → Success ✅
-4. **EC2 still blocked:** `aws ec2 describe-instances --profile test-user` → Access Denied ❌
+I created a test user and watched their permissions evolve:
+
+| Step | Command | Expected Result | What This Proves |
+|------|---------|----------------|------------------|
+| **Initial State** | `aws s3 ls --profile test-user` | ❌ Access Denied | Users start with zero permissions |
+| **After Group Assignment** | `aws iam list-users --profile test-user` | ✅ Success | Group-based permissions work |
+| **After Custom Policy** | `aws s3 ls --profile test-user` | ✅ Success | Custom policies provide specific access |
+| **Boundary Test** | `aws ec2 describe-instances --profile test-user` | ❌ Access Denied | Least privilege is working |
+
+### Setting Up the Test
+
+```bash
+# Configure test user profile
+aws configure --profile test-user
+# Enter the test user's access keys when prompted
+```
+
+### Key Learning
+
+The beauty of this approach is that you can see permissions in action. The user literally goes from having no access to having exactly the access they need - nothing more, nothing less.
 
 ---
 
 ## 🎫 Demo 3: IAM Roles & Service Authentication
 
-### Commands Used:
+This is where things get really interesting. IAM roles eliminate the need for hardcoded credentials entirely.
 
-| Command | Purpose | Demo Context |
-|---------|---------|--------------|
-| `aws configure --profile neil2` | Configure CLI for role assumption testing | Set up user with no direct permissions |
-| `aws s3 ls --profile neil2` | Test S3 access without role | Shows access denied before role assumption |
-| `aws sts assume-role --role-arn arn:aws:iam::ACCOUNT-ID:role/iamroletests3 --role-session-name test-session --profile neil2` | Assume role to gain S3 access | Get temporary credentials with S3 permissions |
-| `aws s3 ls` | Test S3 access with assumed role | Works after assuming role (using temporary credentials) |
-| `aws s3 ls` | Test S3 access from EC2 instance | Demonstrates automatic role assumption by EC2 |
-| `aws ec2 describe-instances` | Test EC2 access from EC2 instance | Fails because role doesn't include EC2 permissions |
-| `TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)` | Get IMDSv2 authentication token | Required for secure metadata access on modern instances |
-| `curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/` | List available IAM role credentials | Shows role name attached to instance |
-| `curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroleec2s3` | Show instance credentials | Display temporary, auto-rotating credentials |
+### Two Types of Role Usage
 
-### Role Flow Demonstration:
-1. **Before role:** `aws s3 ls --profile neil2` → Access Denied ❌
-2. **Assume role:** Get temporary credentials from assume-role command
-3. **With role:** `aws s3 ls` → Success ✅ (using exported temporary credentials)
-4. **From EC2:** `aws s3 ls` → Success ✅ (automatic role assumption)
-5. **EC2 limits:** `aws ec2 describe-instances` → Access Denied ❌ (role boundary working)
+**User Role Assumption** (Temporary permission elevation):
+```bash
+# Test access without role
+aws s3 ls --profile neil2  # Fails ❌
+
+# Assume role temporarily  
+aws sts assume-role \
+  --role-arn arn:aws:iam::ACCOUNT-ID:role/iamroletests3 \
+  --role-session-name test-session \
+  --profile neil2
+
+# Export the temporary credentials from the output above
+export AWS_ACCESS_KEY_ID=ASIA...
+export AWS_SECRET_ACCESS_KEY=...
+export AWS_SESSION_TOKEN=...
+
+# Now S3 access works
+aws s3 ls  # Success ✅
+```
+
+**EC2 Service Roles** (Automatic authentication):
+```bash
+# From within an EC2 instance with an attached role
+aws s3 ls  # Works automatically ✅
+aws ec2 describe-instances  # Fails (not in role permissions) ❌
+```
+
+### Viewing Automatic Credentials
+
+From inside an EC2 instance, you can see the temporary credentials AWS provides:
+
+```bash
+# Get metadata token first
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
+
+# See available roles
+curl -H "X-aws-ec2-metadata-token: $TOKEN" -s \
+  http://169.254.169.254/latest/meta-data/iam/security-credentials/
+
+# Get the actual credentials  
+curl -H "X-aws-ec2-metadata-token: $TOKEN" -s \
+  http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroleec2s3
+```
+
+**What makes this secure**: Credentials rotate automatically every 6 hours, and there's no way to extract long-term keys.
 
 ---
 
 ## 🌐 Demo 4: VPC Network Architecture
 
-### Commands Used:
+After setting up the VPC through the console, I used these commands to verify everything was configured correctly.
 
-| Command | Purpose | Demo Context |
-|---------|---------|--------------|
-| `aws ec2 describe-vpcs --vpc-ids $VPC_ID` | Show VPC details | Display custom VPC configuration after creation |
-| `aws ec2 describe-subnets --filters "Name=vpc-id,Values=$VPC_ID"` | Show subnet details | Display public and private subnets in custom VPC |
-| `aws ec2 describe-route-tables --filters "Name=vpc-id,Values=$VPC_ID"` | Show routing configuration | Display route tables and internet gateway routes |
-| `aws ec2 describe-internet-gateways --filters "Name=attachment.vpc-id,Values=$VPC_ID"` | Show internet gateway | Verify internet gateway is attached to VPC |
+### Verification Commands
 
-### Network Verification Flow:
-- **VPC:** Shows custom CIDR block (10.0.0.0/16)
-- **Subnets:** Shows public (10.0.1.0/24) and private (10.0.2.0/24) subnets
-- **Routes:** Shows internet gateway route for public subnet only
-- **Gateway:** Shows internet gateway attached and available
+```bash
+# Check VPC configuration
+aws ec2 describe-vpcs --vpc-ids $VPC_ID
+
+# Verify subnet setup  
+aws ec2 describe-subnets --filters "Name=vpc-id,Values=$VPC_ID"
+
+# Check routing
+aws ec2 describe-route-tables --filters "Name=vpc-id,Values=$VPC_ID"
+
+# Verify internet gateway
+aws ec2 describe-internet-gateways --filters "Name=attachment.vpc-id,Values=$VPC_ID"
+```
+
+### What to Look For
+
+- **VPC**: Custom CIDR block (10.0.0.0/16)
+- **Subnets**: Public (10.0.1.0/24) and private (10.0.2.0/24) 
+- **Routes**: Internet gateway route for public subnet only
+- **Gateway**: Shows as "attached" and "available"
 
 ---
 
 ## 🔒 Demo 5: Network Firewall Defense
 
-### Commands Used:
+This demo taught me the most about AWS networking security. I'll share what actually works in practice.
 
-| Command | Purpose | Demo Context |
-|---------|---------|--------------|
-| `curl https://checkip.amazonaws.com` | Get current public IP | Determine admin IP for security group rules |
-| `aws ec2 describe-security-groups --group-ids $SG_ID` | Show security group rules | Display SSH access restricted to admin IP only |
-| `aws ec2 describe-network-acls --network-acl-ids $CUSTOM_NACL_ID` | Show network ACL rules | Display subnet-level firewall rules |
+### What I Actually Use
 
-### Security Validation:
-- **IP Discovery:** Shows current public IP for firewall rules
-- **Security Group:** Shows SSH (port 22) allowed from admin IP only
-- **Network ACL:** Shows inbound SSH and outbound ephemeral port rules
+```bash
+# Get my current IP for security rules
+curl https://checkip.amazonaws.com
+
+# Check security group configuration
+aws ec2 describe-security-groups --group-ids $SG_ID
+
+# Verify network ACL rules (if using custom NACLs)
+aws ec2 describe-network-acls --network-acl-ids $CUSTOM_NACL_ID
+```
+
+### Real-World Lesson Learned
+
+**Security Groups vs NACLs**: After testing both approaches extensively, I recommend using Security Groups as your primary defense. Here's why:
+
+- **Security Groups are stateful** - they automatically handle return traffic
+- **NACLs are stateless** - you have to manually configure both directions
+- **Security Groups are simpler** - fewer rules to manage and less chance of mistakes
+
+**When to use NACLs**: Subnet-level policies, compliance requirements, or emergency isolation. For most use cases, Security Groups + default NACLs work perfectly.
 
 ---
 
 ## 💻 Demo 6: Secure EC2 Launch
 
-### Commands Used:
+These commands help verify your EC2 instance launched with proper security configurations.
 
-| Command | Purpose | Demo Context |
-|---------|---------|--------------|
-| `aws ec2 describe-instances --instance-ids $INSTANCE_ID` | Show instance details | Display secure instance configuration |
-| `aws ec2 wait instance-running --instance-ids $INSTANCE_ID` | Wait for instance ready | Ensure instance is running before connection |
+### Post-Launch Verification
 
-### Instance Verification:
-- **Configuration:** Shows instance in custom VPC, public subnet, with security group and IAM role
-- **Status:** Confirms instance is running and ready for SSH connection
+```bash
+# Check instance details
+aws ec2 describe-instances --instance-ids $INSTANCE_ID
+
+# Wait for instance to be ready
+aws ec2 wait instance-running --instance-ids $INSTANCE_ID
+```
+
+### What to Verify
+
+- Instance is in your custom VPC
+- Security group is attached
+- IAM role is attached
+- Instance has a public IP (if in public subnet)
 
 ---
 
 ## 🎯 Demo 7: Complete End-to-End Validation
 
-### Commands Used (from within EC2 instance):
+This is where everything comes together. These commands are run from within the EC2 instance to prove the security is working.
 
-| Command | Purpose | Demo Context |
-|---------|---------|--------------|
-| `aws s3 ls` | Test S3 access from EC2 | Should work - role allows S3 read access |
-| `aws s3api list-buckets` | Test detailed S3 operations | Should work - demonstrates S3 permissions |
-| `aws ec2 describe-instances` | Test EC2 management from EC2 | Should fail - role doesn't include EC2 permissions |
-| `aws iam list-users` | Test IAM access from EC2 | Should fail - role doesn't include IAM permissions |
-| `TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)` | Get IMDSv2 authentication token | Required for secure metadata access on modern instances |
-| `curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/` | List available IAM role credentials | Shows role name attached to instance |
-| `curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroleec2s3` | Show instance credentials | Display temporary, auto-rotating credentials |
-| `curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroleec2s3 \| grep Expiration` | Show credential expiration | Display when credentials expire (6-hour rotation) |
-| `ls -la ~/.aws/` | Check for credential files | Should show no files - proves no hardcoded credentials |
-| `env \| grep -i aws` | Check environment variables | Should show no AWS variables - proves no hardcoded credentials |
-
-### Complete Validation Results:
-
-| Test Category | Command | Expected Result | Security Proof |
-|---------------|---------|----------------|-----------------|
-| **Allowed Operations** | `aws s3 ls` | ✅ Success | Role permissions working |
-| **Allowed Operations** | `aws s3api list-buckets` | ✅ Success | S3 access confirmed |
-| **Blocked Operations** | `aws ec2 describe-instances` | ❌ Access Denied | Permission boundary enforced |
-| **Blocked Operations** | `aws iam list-users` | ❌ Access Denied | Least privilege working |
-| **Credential Security** | `ls -la ~/.aws/` | No files found | No hardcoded credentials |
-| **Credential Security** | `env \| grep -i aws` | No variables | No environment credentials |
-| **Auto-Rotation** | `curl ...security-credentials...` | Shows expiration | Credentials expire automatically |
-
----
-
-## 📊 Command Summary by Category
-
-### **Identity and Verification:**
-- `aws sts get-caller-identity` - Who am I?
-- `aws configure list` - How am I configured?
-- `curl https://checkip.amazonaws.com` - What's my IP?
-
-### **Permission Testing:**
-- `aws s3 ls` - Do I have S3 access?
-- `aws iam list-users` - Do I have IAM access?
-- `aws ec2 describe-instances` - Do I have EC2 access?
-- `aws s3api list-buckets` - Can I perform detailed S3 operations?
-
-### **Role Management:**
-- `aws sts assume-role` - Switch to different permissions
-- `TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)` - Get secure metadata token
-- `curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/` - Show automatic credentials
-
-### **Infrastructure Verification:**
-- `aws ec2 describe-vpcs` - Show network architecture
-- `aws ec2 describe-subnets` - Show network segmentation
-- `aws ec2 describe-security-groups` - Show firewall rules
-- `aws ec2 describe-instances` - Show instance configuration
-
-### **Security Validation:**
-- `ls -la ~/.aws/` - Check for credential files
-- `env | grep -i aws` - Check for environment credentials
-- Profile-based commands with `--profile` - Test different user permissions
-
----
-
-## 🎯 Key Command Patterns in Demos
-
-### **Progressive Permission Testing:**
-1. Start with no permissions → Access Denied
-2. Add group membership → Some access granted  
-3. Add custom policy → Additional access granted
-4. Test boundaries → Other services still denied
-
-### **Role-Based Authentication:**
-1. Direct user access → Fails without permissions
-2. Assume role → Temporary access granted
-3. EC2 automatic assumption → Seamless service access
-4. Permission boundaries → Only specific services allowed
-
-### **Security Verification:**
-1. Network access → SSH from authorized IP only
-2. Service permissions → Only S3 read access works
-3. Credential security → No hardcoded keys found
-4. Automatic rotation → Credentials expire and refresh
-
----
-
-## 📝 Notes for Demo Execution
-
-### **Variable Usage:**
-- Replace `$VPC_ID`, `$SG_ID`, `$INSTANCE_ID` with actual values during demos
-- Replace `ACCOUNT-ID` with your actual AWS account ID
-- Replace `--profile` names with your configured profile names
-
-### **Expected Failures:**
-- Many commands are **supposed to fail** to demonstrate security boundaries
-- Access Denied errors are **positive results** showing security is working
-- Missing credential files are **good signs** showing no hardcoded keys
-
-### **Success Indicators:**
-- `aws sts get-caller-identity` showing admin user (not root)
-- S3 commands working when permissions allow
-- EC2/IAM commands failing when permissions deny
-- Temporary credentials showing expiration times
-- IMDSv2 token authentication working on modern instances
-
-### **IMDSv2 Security Note:**
-Modern EC2 instances require **IMDSv2** (Instance Metadata Service version 2) for enhanced security. Always use token-based authentication:
+### Security Validation Commands
 
 ```bash
-# Required pattern for modern instances
-TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
-curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/iam/security-credentials/[ROLE-NAME]
+# Test what should work
+aws s3 ls  # ✅ Should succeed
+aws s3api list-buckets  # ✅ Should succeed
+
+# Test what should fail  
+aws ec2 describe-instances  # ❌ Should fail (not in role)
+aws iam list-users  # ❌ Should fail (not in role)
 ```
 
-**Security Benefits:**
-- Prevents SSRF (Server-Side Request Forgery) attacks
-- Session-based authentication with token expiration
-- Ensures only legitimate applications access credentials
-- Required on modern AWS instances for compliance
+### Credential Security Check
+
+```bash
+# Verify no hardcoded credentials
+ls -la ~/.aws/  # Should show no files
+env | grep -i aws  # Should show no AWS variables
+
+# Show temporary credentials are working
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
+
+curl -H "X-aws-ec2-metadata-token: $TOKEN" -s \
+  http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroleec2s3
+
+# Check when credentials expire
+curl -H "X-aws-ec2-metadata-token: $TOKEN" -s \
+  http://169.254.169.254/latest/meta-data/iam/security-credentials/iamroleec2s3 | grep Expiration
+```
+
+### What This Proves
+
+| Test | Expected Result | Security Proof |
+|------|----------------|----------------|
+| S3 access | ✅ Works | Role permissions are functional |
+| EC2 management | ❌ Blocked | Permission boundaries are enforced |
+| Credential files | None found | No hardcoded credentials anywhere |
+| Auto-rotation | Shows expiration | Credentials refresh automatically |
+
+---
+
+## 📊 Command Patterns I Found Useful
+
+### Identity and Verification
+```bash
+aws sts get-caller-identity  # Who am I?
+aws configure list           # How am I configured?
+curl https://checkip.amazonaws.com  # What's my IP?
+```
+
+### Permission Testing
+```bash
+aws s3 ls                    # Do I have S3 access?
+aws iam list-users          # Do I have IAM access?  
+aws ec2 describe-instances  # Do I have EC2 access?
+```
+
+### Role Management
+```bash
+aws sts assume-role         # Switch to different permissions
+
+# Get secure metadata token
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
+
+# Show automatic credentials
+curl -H "X-aws-ec2-metadata-token: $TOKEN" -s \
+  http://169.254.169.254/latest/meta-data/iam/security-credentials/
+```
+
+---
+
+## 🛠️ Troubleshooting Tips
+
+### Common Issues I Encountered
+
+**IMDSv2 Token Issues**: If metadata commands hang or fail, you're probably on a modern instance that requires tokens. Always use the token-based approach shown above.
+
+**Permission Denied Errors**: These are often good signs! They prove your security boundaries are working. Make sure you understand which commands should fail.
+
+**Profile Configuration**: When using `--profile`, make sure you've configured that profile with `aws configure --profile [name]` first.
+
+### Variables to Replace
+
+Throughout these commands, replace these placeholders with your actual values:
+- `$VPC_ID` - Your VPC ID
+- `$SG_ID` - Your Security Group ID  
+- `$INSTANCE_ID` - Your EC2 Instance ID
+- `ACCOUNT-ID` - Your AWS Account ID
+- `[ROLE-NAME]` - Your actual IAM role name
+
+### When Commands Should Fail
+
+Remember, many of these commands are **supposed to fail** - that's how we prove security is working:
+- Access Denied errors show permission boundaries are enforced
+- Missing credential files prove no hardcoded keys exist
+- Failed EC2/IAM commands from EC2 instances prove least privilege
+
+---
+
+## 🎓 Key Takeaways
+
+After working through all these demos, here's what I learned:
+
+1. **IMDSv2 is the new standard** - Always use token-based metadata access
+2. **Security Groups are usually sufficient** - Default NACLs work great for most cases
+3. **Roles eliminate credential management** - No keys to rotate or secure
+4. **Stateful firewalls are simpler** - Let AWS handle the complexity
+5. **Failed commands can be success** - Proves your security is working
+
+These commands represent real-world, tested approaches to AWS security. They follow current best practices and work reliably in production environments.
+
+---
+
