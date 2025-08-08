@@ -62,11 +62,36 @@ I created a custom VPC with public and private subnets, implementing multiple la
 
 I created a custom IAM role for the EC2 instance because using root credentials or hardcoded keys is a massive security risk. For this VPC security demo, I kept the EC2 permissions minimal and focused on read-only access.
 
+#### EC2 Instance Permissions (Read-Only) - CORRECTED VERSION
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:ListBucket",
+        "s3:ListBucketVersions",
+        "s3:GetBucketLocation",
+        "s3:GetBucketVersioning"
+      ],
+      "Resource": [
+        "arn:aws:s3:::*",
+        "arn:aws:s3:::*/*"
+      ]
+    }
+  ]
+}
+```
+
 #### Why Read-Only for EC2?
-- **s3:GetObject:** Can download files from the specific demo bucket only
-- **s3:ListBucket:** Can see what files exist in the bucket
+- **s3:GetObject:** Can download files from any S3 bucket
+- **s3:ListBucket:** Can see what files exist in buckets
 - **No write/delete permissions:** Follows principle of least privilege for infrastructure
-- **Bucket-specific:** Can't access other S3 buckets in the account
+- **All buckets accessible:** Provides flexibility without requiring policy updates for new buckets
 - **Perfect for log collection or config file retrieval**
 
 ### Separate IAM User Demo (Full S3 Testing)
@@ -137,6 +162,9 @@ Here's where I implemented the "defense in depth" concept with multiple security
 | 100 | TCP | 1024-65535 | My.IP.Address/32 | ALLOW | SSH return traffic to my admin IP |
 | 200 | TCP | 80 | 0.0.0.0/0 | ALLOW | HTTP requests (package updates) |
 | 300 | TCP | 443 | 0.0.0.0/0 | ALLOW | HTTPS requests to AWS services |
+
+**Critical Security Issue Identified:**
+After implementing this configuration, I realized that Rule 200 (allowing inbound traffic on ports 1024-65535 from anywhere on the internet) creates a massive security vulnerability. Opening over 64,000 ports to the entire internet essentially turns your server into a target for port scanning and potential attacks. While custom NACLs can provide valuable subnet-level controls for certain scenarios, this particular setup demonstrates why Security Groups are typically the better choice for instance-level security. Security Groups are stateful and automatically handle return traffic without requiring overly permissive inbound rules. For this demo, I should have relied on Security Groups for EC2 protection and used NACLs only for broader subnet-level policies like blocking entire IP ranges or protocols.
 
 **Why NACLs Are Tricky:**
 - **Stateless:** Unlike security groups, NACLs don't automatically allow return traffic
