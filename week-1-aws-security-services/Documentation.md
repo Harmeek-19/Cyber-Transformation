@@ -62,29 +62,6 @@ I created a custom VPC with public and private subnets, implementing multiple la
 
 I created a custom IAM role for the EC2 instance because using root credentials or hardcoded keys is a massive security risk. For this VPC security demo, I kept the EC2 permissions minimal and focused on read-only access.
 
-#### EC2 Instance Permissions (Read-Only)
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:GetObject"
-      ],
-      "Resource": "arn:aws:s3:::demo-bucket/*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:ListBucket"
-      ],
-      "Resource": "arn:aws:s3:::demo-bucket"
-    }
-  ]
-}
-```
-
 #### Why Read-Only for EC2?
 - **s3:GetObject:** Can download files from the specific demo bucket only
 - **s3:ListBucket:** Can see what files exist in the bucket
