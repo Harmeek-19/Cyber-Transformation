@@ -293,7 +293,8 @@ aws sts get-caller-identity
 # 2. IAM enumeration events (reconnaissance patterns)
 aws iam list-users
 aws iam list-roles
-# Creates: ListUsers, ListRoles events showing account discovery
+aws iam get-account-summary
+# Creates: ListUsers, ListRoles, GetAccountSummary events showing account discovery
 
 # 3. S3 service interaction events
 aws s3 ls
@@ -310,9 +311,11 @@ aws s3 mb s3://test-event-bucket-733366527973 --region us-east-1
 aws s3 rb s3://test-event-bucket-733366527973 --region us-east-1
 # Creates: CreateBucket, DeleteBucket events showing infrastructure changes
 
-# 6. Additional identity events
+# 6. Additional identity and service events
 aws iam get-user --user-name admin
-# Creates: GetUser event showing user information access
+aws configservice describe-configuration-recorders
+aws guardduty list-detectors
+# Creates: GetUser, DescribeConfigurationRecorders, ListDetectors events
 ```
 
 **Event Categories Generated:**
@@ -351,14 +354,42 @@ aws s3 sync s3://cloudtrail-logs-733366527973-training/AWSLogs/733366527973/Clou
 # Expected output: Downloaded .json.gz files containing compressed event logs
 ```
 
-### List Downloaded Log Files
+### Analyze Downloaded Log Files
 ```bash
-# Examine downloaded log files
+# List downloaded log files
 dir cloudtrail-logs
 # or
 ls cloudtrail-logs
 
 # Expected output: Files named like: 733366527973_CloudTrail_us-east-1_20250813T1234Z_AbCdEf123456.json.gz
+```
+
+### Search CloudTrail Logs for Security Events
+```bash
+# Navigate to logs directory
+cd cloudtrail-logs
+
+# Search for specific events using Windows findstr command
+# Test bucket operations
+findstr /i "test-event-bucket" *.json
+
+# Authentication and role events
+findstr /i "ConsoleLogin" *.json
+findstr /i "AssumeRole" *.json
+
+# Resource creation/deletion events
+findstr /i "CreateBucket" *.json
+findstr /i "DeleteBucket" *.json
+
+# S3 service events
+findstr /i "s3.amazonaws.com" *.json
+
+# Identity verification events
+findstr /i "GetCallerIdentity" *.json
+
+# Search for all events from specific service
+findstr /i "iam.amazonaws.com" *.json
+findstr /i "sts.amazonaws.com" *.json
 ```
 
 **Log File Structure:**
