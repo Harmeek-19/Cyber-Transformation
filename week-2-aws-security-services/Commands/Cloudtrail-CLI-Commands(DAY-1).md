@@ -12,6 +12,13 @@ aws sts get-caller-identity --profile admin-mfa
 
 **Security Note:** All subsequent commands use `--profile admin-mfa` for secure access following enterprise security consultant methodology.
 
+**OR**
+
+### Set environment variable for the current PowerShell session.
+```bash
+$env:AWS_PROFILE = "admin-mfa"
+```
+
 ### Working Directory Setup
 ```bash
 # Create dedicated directory for Day 2 Config implementation
