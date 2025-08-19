@@ -467,6 +467,156 @@ aws securityhub get-findings --query 'Findings[*].ProductName' --output text | S
 
 ---
 
+### Macie Custom Data Identifier Implementation
+
+#### Custom Data Identifier Creation
+```powershell
+# Create Employee ID Pattern
+aws macie2 create-custom-data-identifier \
+    --name "Employee-ID-Pattern" \
+    --description "Company employee ID format EMP-XXXXX for HR systems" \
+    --regex "EMP-[0-9]{5}" \
+    --keywords "employee" "staff" "worker" "personnel" \
+    --maximum-match-distance 50
+# Output: {"customDataIdentifierId": "f48f6a4e-6999-4cc8-8741-4ad111c6dcf5"}
+
+# Create Customer Reference Pattern
+aws macie2 create-custom-data-identifier \
+    --name "Customer-Reference-Pattern" \
+    --description "Customer reference numbers CU followed by 8 digits" \
+    --regex "CU[0-9]{8}" \
+    --keywords "customer" "client" "reference" "account" \
+    --maximum-match-distance 50
+# Output: {"customDataIdentifierId": "e320da36-b5ce-451a-8ce6-39d3ac02e792"}
+
+# Create Project Code Pattern
+aws macie2 create-custom-data-identifier \
+    --name "Project-Code-Pattern" \
+    --description "Internal project codes PROJ-YYYY-XXX format" \
+    --regex "PROJ-[0-9]{4}-[A-Z]{3}" \
+    --keywords "project" "internal" "confidential" "initiative" \
+    --maximum-match-distance 50
+# Output: {"customDataIdentifierId": "71523b19-17d5-45b3-ac90-f56ac1a9bca8"}
+```
+
+#### Custom Data Identifier Management
+```powershell
+# List all custom data identifiers
+aws macie2 list-custom-data-identifiers
+
+# List custom identifiers with specific fields
+aws macie2 list-custom-data-identifiers --query 'items[*].{Name:name,Id:id}'
+
+# Get detailed information for specific custom identifier
+aws macie2 get-custom-data-identifier --id "71523b19-17d5-45b3-ac90-f56ac1a9bca8"
+```
+
+#### Custom Test Data Creation and Upload
+```bash
+# Create employee data file
+cat > employee-custom-data.txt << 'EOF'
+Employee Directory - CONFIDENTIAL
+
+Employee Records:
+Name: John Smith
+Employee ID: EMP-12345
+Department: Information Technology
+Clearance Level: SECRET
+
+Name: Jane Doe  
+Employee ID: EMP-67890
+Department: Human Resources
+Project Assignment: PROJ-2025-SEC
+
+Customer Information:
+Primary Customer: ABC Corporation
+Customer Reference: CU12345678
+Account Manager: EMP-54321
+
+Project Details:
+Project Code: PROJ-2025-FIN
+Budget Code: ACC-DEPT-789
+Classification: CONFIDENTIAL
+EOF
+
+# Create customer database export
+cat > customer-custom-data.csv << 'EOF'
+CustomerID,Name,Reference,AssignedEmployee,ContactPhone
+1,ABC Corp,CU11111111,EMP-11111,(555) 123-4567
+2,XYZ Ltd,CU22222222,EMP-22222,(555) 987-6543
+3,Tech Solutions,CU33333333,EMP-33333,(555) 456-7890
+EOF
+
+# Create project manifest file
+cat > project-custom-data.json << 'EOF'
+{
+  "projects": [
+    {
+      "name": "Security Enhancement Initiative",
+      "code": "PROJ-2025-SEC", 
+      "lead": "EMP-12345",
+      "customer_ref": "CU12345678",
+      "classification": "CONFIDENTIAL"
+    },
+    {
+      "name": "Financial System Upgrade",
+      "code": "PROJ-2025-FIN",
+      "lead": "EMP-67890", 
+      "customer_ref": "CU87654321",
+      "classification": "INTERNAL"
+    }
+  ]
+}
+EOF
+```
+
+#### Upload Custom Test Data to S3
+```powershell
+# Upload custom test files to Macie test bucket
+aws s3 cp employee-custom-data.txt s3://macie-test-data-733366527973/ --profile admin-mfa
+# Completed 493 Bytes/493 Bytes (396 Bytes/s) with 1 file(s) remaining
+# upload: .\employee-custom-data.txt to s3://macie-test-data-733366527973/employee-custom-data.txt
+
+aws s3 cp customer-custom-data.csv s3://macie-test-data-733366527973/ --profile admin-mfa
+# Completed 204 Bytes/204 Bytes (173 Bytes/s) with 1 file(s) remaining
+# upload: .\customer-custom-data.csv to s3://macie-test-data-733366527973/customer-custom-data.csv
+
+aws s3 cp project-custom-data.json s3://macie-test-data-733366527973/ --profile admin-mfa
+# Completed 420 Bytes/420 Bytes (363 Bytes/s) with 1 file(s) remaining
+# upload: .\project-custom-data.json to s3://macie-test-data-733366527973/project-custom-data.json
+
+# Verify uploaded files
+aws s3 ls s3://macie-test-data-733366527973/
+```
+
+#### Create Classification Job with Custom Identifiers
+```powershell
+# Create classification job using all custom data identifiers
+aws macie2 create-classification-job \
+    --job-type ONE_TIME \
+    --name "Custom-Data-Discovery-Enterprise" \
+    --description "Classification job using custom company data identifiers" \
+    --custom-data-identifier-ids "71523b19-17d5-45b3-ac90-f56ac1a9bca8" "e320da36-b5ce-451a-8ce6-39d3ac02e792" "f48f6a4e-6999-4cc8-8741-4ad111c6dcf5" \
+    --s3-job-definition '{\"bucketDefinitions\":[{\"accountId\":\"733366527973\",\"buckets\":[\"macie-test-data-733366527973\"]}]}' \
+    --sampling-percentage 100
+# Output: {
+#     "jobArn": "arn:aws:macie2:us-east-1:733366527973:classification-job/664235e4f897f70ad5beba05041a495b",
+#     "jobId": "664235e4f897f70ad5beba05041a495b"
+# }
+```
+
+#### Monitor Custom Classification Job
+```powershell
+# Monitor custom classification job progress
+aws macie2 describe-classification-job \
+    --job-id 664235e4f897f70ad5beba05041a495b \
+    --query '{JobId:jobId,Status:jobStatus,Name:name,CreatedAt:createdAt,Statistics:statistics}'
+
+# Check findings count after job completion
+aws macie2 list-findings --query 'length(findingIds)'
+# Output: 14
+```
+
 ## 🔧 Cross-Service Integration Commands
 
 ### Complete Service Status Check
