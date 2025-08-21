@@ -21,9 +21,9 @@ $env:AWS_PROFILE = "admin-mfa"
 
 ### Working Directory Setup
 ```bash
-# Create dedicated directory for Day 2 Config implementation
-mkdir aws-config-day2
-cd aws-config-day2
+# Create dedicated directory for implementation
+mkdir cloudtrail-logs
+cd cloudtrail-logs
 # Achievement: Organized workspace for policy files and documentation
 ```
 
